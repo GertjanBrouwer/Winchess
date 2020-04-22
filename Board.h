@@ -14,7 +14,7 @@ const bitboard kStartAllWhite = 0b1111111111111111000000000000000000000000000000
 const bitboard kStartAllBlack = 0b0000000000000000000000000000000000000000000000001111111111111111;
 
 const bitboard kStartPiecePositions[] = {kStartPawn, kStartKnight, kStartBishop, kStartRook, kStartQueen, kStartKing};
-const bitboard kPieceSides[] = {kStartAllWhite, kStartAllBlack};
+const bitboard kPieceColor[] = {kStartAllWhite, kStartAllBlack};
 
 const char kPieceChars[] = {'p', 'n', 'b', 'r', 'q', 'k'};
 

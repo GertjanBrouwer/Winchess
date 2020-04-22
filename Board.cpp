@@ -12,7 +12,7 @@ void Board::initBoard()
 		// Every side has only 6 unique piece types
 		for(short type = 0; type < 6; type++)
 		{
-			pieces[color][type] = kStartPiecePositions[type] & kPieceSides[color];
+			pieces[color][type] = kStartPiecePositions[type] & kPieceColor[color];
 		}
 	}
 }
@@ -70,11 +70,9 @@ void Board::printBitboard()
 			std::cout << ' ' << result[index] << ' ';
 			if((index + 1) % 8 == 0 && index + 1 != 8)
 			{
-				std::cout << row + 1 << "|\n"
-						  << "|" << row;
+				std::cout << row + 1 << "|\n"  << "|" << row;
 			}
-			else if(index + 1 != 8)
-				std::cout << "";
+			else if(index + 1 != 8) std::cout << "";
 		}
 	}
 	std::cout << "1|\n|  A  B  C  D  E  F  G  H  |\n";

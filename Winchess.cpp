@@ -10,7 +10,7 @@ int main()
 	Board board;
 	
 	board.printBitboard();
-	board.setMove("a1a4");
+	board.setMove("c2c4");
 	board.printBitboard();
 }
 
