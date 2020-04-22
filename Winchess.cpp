@@ -1,11 +1,17 @@
-// Winchess.cpp : This file contains the 'main' function. Program execution begins and ends there.
+﻿// Winchess.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
 #include <iostream>
+#include "Board.h"
+#include <bitset>
 
 int main()
 {
-	std::cout << "Hello World!\n";
+	Board board;
+	
+	board.printBitboard();
+	board.setMove("a1a4");
+	board.printBitboard();
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
