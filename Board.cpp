@@ -6,28 +6,28 @@ Board::Board()
 	{
 		for(uint8_t type = 0; type < 6; type++)
 		{
-			//	kStartPiecePositions = bitboards of start position of all the pieces
-			//	kPieceColor = bitboards of the chess piece colors
-			//	When doing a bit and-operation on these 2 bitboards. Only the places where both bitboards have a 1 will remain a 1.
-			//	This will in the case of rooks and white. Only leave a bit on the first and 8th position in the resulting bitboard.
+			// kStartPiecePositions = bitboards of start position of all the pieces
+			// kPieceColor = bitboards of the chess piece colors
+			// When doing a bit and-operation on these 2 bitboards. Only the places where both bitboards have a 1 will remain a 1.
+			// This will in the case of rooks and white. Only leave a bit on the first and 8th position in the resulting bitboard.
 			pieces[color][type] = kStartPiecePositions[type] & kPieceColor[color];
 		}
 	}
 }
 
-//	Moving the pawn e2->e4 from the initial chess position :
+// Moving the pawn e2->e4 from the initial chess position :
 //
-//	pieces[white][pawns] bitboard looks like this : bits : 000000001111111100000000
+// pieces[white][pawns] bitboard looks like this : bits : 000000001111111100000000
 //
-//	startPosition : bits : 000000000000100000000000
-//	targetPosition : bits : 000000000000000000001000
+// startPosition : bits : 000000000000100000000000
+// targetPosition : bits : 000000000000000000001000
 //
-//	now remove the startPosition bit from the bitboard,
-//	resulting in : 000000001111011100000000
-//	then add the targetPosition bit to the bitboard,
-//	resulting in : 000000001111011100001000
+// now remove the startPosition bit from the bitboard,
+// resulting in : 000000001111011100000000
+// then add the targetPosition bit to the bitboard,
+// resulting in : 000000001111011100001000
 //
-//	When formatting into a board it looks like this : 00000000 11110111 00001000
+// When formatting into a board it looks like this : 00000000 11110111 00001000
 void Board::move(const char* move)
 {
 	uint8_t startPosition = positionToIndex(move);
@@ -41,8 +41,10 @@ void Board::move(const char* move)
 
 uint8_t Board::positionToIndex(const char* position)
 {
-	//	Calculate index using ASCII values (a = 97 and 1 = 49)
-	//	For example position b2 returns the index 9
+	// Calculate index using ASCII values (a = 97 and 1 = 49)
+	// b : 98 - 97 = 1 
+	// 2 : (50 - 49) * 8
+	// b2 results in 8 + 1 = 9
 	return position[0] - 97 + (position[1] - 49) * 8;
 }
 
@@ -52,7 +54,7 @@ piece Board::getPieceAt(uint8_t index)
 	{
 		for(uint8_t type = 0; type < 6; type++)
 		{
-			//	Move bit at index position to front and check if piece is present (bit and-operation)
+			// Move bit at index position to front and check if piece is present (bit and-operation)
 			if((pieces[color][type] >> index) & 0b1)
 			{
 				return {color, type};
