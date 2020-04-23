@@ -32,6 +32,6 @@ public:
 	Board();
 	void printBitboard();
 	void move(const char* move);
-	short positionToIndex(const char* position);
-	piece getPieceAt(short index);
+	uint8_t positionToIndex(const char* position);
+	piece getPieceAt(uint8_t index);
 };
