@@ -10,8 +10,8 @@ const bitboard kStartRook = 0b10000001000000000000000000000000000000000000000000
 const bitboard kStartQueen = 0b0000100000000000000000000000000000000000000000000000000000001000;
 const bitboard kStartKing = 0b0001000000000000000000000000000000000000000000000000000000010000;
 
-const bitboard kStartAllWhite = 0b1111111111111111000000000000000000000000000000000000000000000000;
-const bitboard kStartAllBlack = 0b0000000000000000000000000000000000000000000000001111111111111111;
+const bitboard kStartAllWhite = 0b0000000000000000000000000000000000000000000000001111111111111111;
+const bitboard kStartAllBlack = 0b1111111111111111000000000000000000000000000000000000000000000000;
 
 const bitboard kStartPiecePositions[] = {kStartPawn, kStartKnight, kStartBishop, kStartRook, kStartQueen, kStartKing};
 const bitboard kPieceColor[] = {kStartAllWhite, kStartAllBlack};
@@ -30,9 +30,8 @@ public:
 	bitboard pieces[2][6];
 
 	Board();
-	void initBoard();
 	void printBitboard();
-	void setMove(const char* move);
+	void move(const char* move);
 	short positionToIndex(const char* position);
 	piece getPieceAt(short index);
 };
