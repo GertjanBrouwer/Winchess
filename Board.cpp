@@ -43,7 +43,7 @@ uint8_t Board::positionToIndex(const char* position)
 {
 	// Calculate index using ASCII values (a = 97 and 1 = 49)
 	// b : 98 - 97 = 1 
-	// 2 : (50 - 49) * 8
+	// 2 : (50 - 49) * 8 = 8
 	// b2 results in 8 + 1 = 9
 	return position[0] - 97 + (position[1] - 49) * 8;
 }
