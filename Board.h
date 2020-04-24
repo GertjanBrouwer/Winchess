@@ -18,7 +18,16 @@ const bitboard kPieceColor[] = {kStartAllWhite, kStartAllBlack};
 
 const char kPieceChars[] = {'p', 'n', 'b', 'r', 'q', 'k'};
 
-struct piece
+enum PieceType
+{
+	Pawn,
+	Knight,
+	Bishop,
+	Queen,
+	King
+};
+
+struct Piece
 {
 	short color;
 	short type;
@@ -32,6 +41,7 @@ public:
 	Board();
 	void printBitboard();
 	void move(const char* move);
+	bitboard getOccupiedBoard(uint8_t color);
 	uint8_t positionToIndex(const char* position);
-	piece getPieceAt(uint8_t index);
+	Piece getPieceAt(uint8_t index);
 };
