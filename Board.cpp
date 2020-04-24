@@ -40,12 +40,32 @@ void Board::move(const char* move)
 	pieces[movePiece.color][movePiece.type] = (pieces[movePiece.color][movePiece.type] - ((bitboard)1 << startPosition)) + ((bitboard)1 << targetPosition);
 }
 
+
+void Board::updateCombinedBitboard()
+{
+	// @TODO Cache and update combined bit boards here (Occupied (by color), AllPieces, Empty?, etc..)
+}
+
+
 bitboard Board::getOccupied(uint8_t color)
 {
 	bitboard result = 0;
 	for(size_t index = 0; index < 6; index++)
 	{
 		result |= pieces[color][index];
+	}
+
+	return result;
+}
+
+// Returns a bitboard containing all the pieces on the board
+bitboard Board::getAllPieces()
+{
+	bitboard result = 0;
+	for(size_t index = 0; index < 6; index++)
+	{
+		result |= pieces[0][index];
+		result |= pieces[1][index];
 	}
 
 	return result;
