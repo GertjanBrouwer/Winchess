@@ -24,12 +24,18 @@ public:
 	std::vector<move> getAllMoves();
 	bitboard getPawnMoves(uint8_t position);
 	bitboard getKnightMoves(uint8_t position);
+	bitboard getBishopMoves(uint8_t position);
 	bitboard getRookMoves(uint8_t position);
+	bitboard getQueenMoves(uint8_t position);
+	bitboard getKingMoves(uint8_t position);
 
 	bitboard northOccluded(bitboard board);
 	bitboard eastOccluded(bitboard board);
 	bitboard southOccluded(bitboard board);
 	bitboard westOccluded(bitboard board);
 
-	bitboard northEastOccluded
+	bitboard northEastOccluded(bitboard board);
+	bitboard southEastOccluded(bitboard board);
+	bitboard northWestOccluded(bitboard board);
+	bitboard southWestOccluded(bitboard board);
 };
