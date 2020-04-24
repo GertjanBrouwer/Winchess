@@ -1,5 +1,9 @@
 #pragma once
 #include <iostream>
+#include <stack>
+#include <vector>
+
+#include "MoveGeneration.h"
 
 typedef uint64_t bitboard;
 
@@ -43,13 +47,20 @@ struct Piece
 class Board
 {
 public:
-	PieceColor turn = PieceColor::White;
+	PieceColor turn = White;
 	bitboard pieces[2][6];
-
+	bool wQueenSide;
+	bool wKingSide;
+	bool bQueenSide;
+	bool bKingSide;
+	std::stack<move> moves;
+	
 	Board();
 	void printBitboard();
 	void move(const char* move);
 	bitboard getOccupied(uint8_t color);
 	uint8_t positionToIndex(const char* position);
 	Piece getPieceAt(uint8_t index);
+	bitboard getAllPieces();
+	void updateCombinedBitboard();
 };

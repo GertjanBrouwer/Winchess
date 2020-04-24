@@ -33,9 +33,15 @@ public:
 	bitboard eastOccluded(bitboard board);
 	bitboard southOccluded(bitboard board);
 	bitboard westOccluded(bitboard board);
+	bool isInCheck(int square);
+	bitboard getCastlingMoves(uint8_t square);
 
 	bitboard northEastOccluded(bitboard board);
 	bitboard southEastOccluded(bitboard board);
 	bitboard northWestOccluded(bitboard board);
 	bitboard southWestOccluded(bitboard board);
+	
+	bool isInCheck(int square);
+	bitboard getCastlingMoves(uint8_t square);
+
 };
