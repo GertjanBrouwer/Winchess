@@ -32,8 +32,6 @@
     <ClInclude Include="UCI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="Board.h">
       <Filter>Header Files</Filter>
     </ClInclude>

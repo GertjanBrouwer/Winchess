@@ -1,10 +1,11 @@
 #pragma once
 #include <iostream>
+#include "Board.h"
 class UCI
 {
 public:
 
-	UCI();
+	UCI(Board* bitboard);
 	~UCI();
 
 
@@ -17,11 +18,11 @@ public:
 	void inputPosition(std::string inputString);
 	void inputGo();
 	void inputPrint();
-
+	void getFen();
 
 private:
 	std::string engineName;
-
+	Board* board;
 	char command[256];
 	std::string charToString();
 	std::string concatString(std::string input, int length);

@@ -1,4 +1,5 @@
-#include "Board.h" 
+#include "Board.h"
+#include <map>
 
 Board::Board()
 {
@@ -33,7 +34,7 @@ void Board::move(const char* move)
 	uint8_t startPosition = positionToIndex(move);
 	uint8_t targetPosition = positionToIndex(&move[2]);
 	piece movePiece = getPieceAt(startPosition);
-	if(movePiece.color < 0) 
+	if(movePiece.color < 0)
 		return;
 	pieces[movePiece.color][movePiece.type] =
 		(pieces[movePiece.color][movePiece.type] - ((bitboard)1 << startPosition)) + ((bitboard)1 << targetPosition);
@@ -42,7 +43,7 @@ void Board::move(const char* move)
 uint8_t Board::positionToIndex(const char* position)
 {
 	// Calculate index using ASCII values (a = 97 and 1 = 49)
-	// b : 98 - 97 = 1 
+	// b : 98 - 97 = 1
 	// 2 : (50 - 49) * 8 = 8
 	// b2 results in 8 + 1 = 9
 	return position[0] - 97 + (position[1] - 49) * 8;
@@ -62,9 +63,94 @@ piece Board::getPieceAt(uint8_t index)
 		}
 	}
 
-	return {-1,-1};
+	return {-1, -1};
 }
- 
+
+void Board::clearBoard() {
+	for(uint8_t color = 0; color < 2; color++)
+	{
+		for(uint8_t type = 0; type < 6; type++)
+		{
+			pieces[color][type] = 0;
+		}
+	}
+}
+
+void Board::setBoard(const char* fen)
+{
+	clearBoard();
+
+	int currentPosition = -1;
+	for(uint8_t index = 0; index < strlen(fen); index++)
+	{
+		char current = fen[index];
+
+		if(isdigit(current))
+		{
+			currentPosition += (int)current - 48;
+		}
+		if(isalpha(current))
+		{
+			currentPosition += 1;
+			short type;
+
+			short color = 0;
+
+			if(isupper(current))
+			{
+				color = 1;
+				current = tolower(current);
+			}
+			std::map<char, uint8_t> types = {{'p', 0}, {'n', 1}, {'b', 2}, {'r', 3}, {'q', 4}, {'k',5}};
+
+			type = types[current];
+
+			pieces[color][type] |= (bitboard)1 << currentPosition;
+		}
+	}
+}
+
+std::string Board::getFen() 
+{
+	char resultList[64];
+	std::string result;
+	uint8_t counter = 0;
+
+	for(uint8_t index = 0; index < 64; index++)
+	{
+		piece piece = getPieceAt(index);
+		if(piece.color >= 0)
+		{
+			resultList[index] = (piece.color == 0) ? toupper(kPieceChars[piece.type]) : kPieceChars[piece.type];
+			continue;
+		}
+		resultList[index] = ' ';
+	}
+	
+	for(uint8_t i = 0; i < 64; i++)
+	{
+		if(i % 8 == 0 && i != 64 && i != 0)
+		{
+			result += "/";
+		}
+		if(!isspace(resultList[i]))
+		{
+			result += resultList[i];
+		}
+		else
+		{
+			counter++;
+			if(counter == 8)
+			{
+				result += '8';
+				counter = 0;
+			}
+		}
+
+	}
+	return result;
+}
+
 void Board::printBitboard()
 {
 	char result[64];
@@ -89,9 +175,11 @@ void Board::printBitboard()
 			std::cout << ' ' << result[index] << ' ';
 			if((index + 1) % 8 == 0 && index + 1 != 8)
 			{
-				std::cout << row + 1 << "|\n"  << "|" << row;
+				std::cout << row + 1 << "|\n"
+						  << "|" << row;
 			}
-			else if(index + 1 != 8) std::cout << "";
+			else if(index + 1 != 8)
+				std::cout << "";
 		}
 	}
 	std::cout << "1|\n|  A  B  C  D  E  F  G  H  |\n";

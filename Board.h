@@ -34,4 +34,10 @@ public:
 	void move(const char* move);
 	uint8_t positionToIndex(const char* position);
 	piece getPieceAt(uint8_t index);
+	void setBoard(const char* fen);
+	std::string getFen();
+
+private:
+
+	void clearBoard();
 };

@@ -1,62 +1,76 @@
 #include "UCI.h"
 #include <iostream>
 
-UCI::UCI(){
+UCI::UCI(Board* bitboard)
+{
 	engineName = "Winchess v1";
+	board = bitboard;
 };
 
-UCI::~UCI(){
+UCI::~UCI()
+{
 
 };
 
-void UCI::Read(){
+void UCI::Read()
+{
 	std::cout << "Give command" << std::endl;
 	while(true)
 	{
-
 		//read incomming line and save in char array command
 		std::cin.getline(command,256);
 		std::cout << "-----------------" << std::endl;
-		if(strstr(command, "uci"))
-		{
-			inputUCI();
-		}
-		else if (strstr(command, "setoption"))
+
+		if (strstr(command, "setoption"))
 		{
 			inputSetOptions(charToString());
 		}
-		else if(strstr(command, "isready"))
+		else if (strstr(command, "isready"))
 		{
 			inputIsReady();
 		}
-		else if(strstr(command, "ucinewgame"))
+		else if (strstr(command, "ucinewgame"))
 		{
 			inputUCINewGame();
 		}
-		else if(strstr(command, "position"))
+		else if (strstr(command, "position"))
 		{
 			inputPosition(charToString());
 		}
-		else if(strstr(command, "go"))
+		else if (strstr(command, "go"))
 		{
 			inputGo();
 		}
-		else if(strstr(command, "print"))
+		else if (strstr(command, "print"))
 		{
 			inputPrint();
+		}
+		else if (strstr(command, "uci"))
+		{
+			inputUCI();
+		}
+		else if (strstr(command, "getfen"))
+		{
+			getFen();
+		}
+		else
+		{
+			std::cout << "non valid command" << std::endl;
 		}
 		std::cout << "-----------------" << std::endl;
 	}
 };
 
-void UCI::inputUCI(){
+void UCI::inputUCI()
+{
 	std::cout << "id name"+ engineName << std::endl;
 	std::cout << "id author team Winchess" << std::endl;
 	//options go here
 	std::cout << "uciok" << std::endl;
 };
 
-void UCI::inputSetOptions(std::string inputString){
+void UCI::inputSetOptions(std::string inputString)
+{
 
 };
 
@@ -65,11 +79,16 @@ void UCI::inputIsReady()
 	std::cout << "readyok" << std::endl;
 };
 
-void UCI::inputUCINewGame(){
-
+void UCI::inputUCINewGame()
+{
+	std::cout << "starting new game..." << std::endl;
+	//const char* fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+	const char* fen = "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR";
+	board->setBoard(fen);
 };
 
-void UCI::inputPosition(std::string inputString){
+void UCI::inputPosition(std::string inputString)
+{
 
 	//remove posistion_ from input
 	inputString = concatString(inputString,9);
@@ -101,6 +120,8 @@ void UCI::inputPosition(std::string inputString){
 		{
 			std::cout << inputString.substr(0, 4) << std::endl;
 
+			board->move(inputString.substr(0,4).c_str());
+
 			//remove the first move in the list
 			inputString = concatString(inputString, 5);
 		}
@@ -108,18 +129,27 @@ void UCI::inputPosition(std::string inputString){
 
 };
 
-void UCI::inputGo(){
+void UCI::inputGo()
+{
 
 };
 
-void UCI::inputPrint(){
-
+void UCI::getFen()
+{
+	std::cout << board->getFen() << std::endl;
 };
 
-std::string UCI::charToString() {
+void UCI::inputPrint()
+{
+	board->printBitboard();
+};
+
+std::string UCI::charToString()
+{
 	return std::string(command);
-}
+};
 
-std::string UCI::concatString(std::string input, int length) {
-	return input.erase(0,length);
-}
+std::string UCI::concatString(std::string input, int length)
+{
+	return input.erase(0, length);
+};
