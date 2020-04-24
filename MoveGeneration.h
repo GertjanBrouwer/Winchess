@@ -1,5 +1,4 @@
 #pragma once
-#include <iostream>
 #include <vector>
 #include "Board.h"
 
@@ -33,8 +32,6 @@ public:
 	bitboard eastOccluded(bitboard board);
 	bitboard southOccluded(bitboard board);
 	bitboard westOccluded(bitboard board);
-	bool isInCheck(int square);
-	bitboard getCastlingMoves(uint8_t square);
 
 	bitboard northEastOccluded(bitboard board);
 	bitboard southEastOccluded(bitboard board);
@@ -42,6 +39,7 @@ public:
 	bitboard southWestOccluded(bitboard board);
 	
 	bool isInCheck(int square);
+	bitboard getEnPassant(int square);
 	bitboard getCastlingMoves(uint8_t square);
 
 };
