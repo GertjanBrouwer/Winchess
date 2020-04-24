@@ -4,7 +4,12 @@
 #include <stack>
 #include <vector>
 
-#include "MoveGeneration.h"
+
+struct move
+{
+	short startPosition;
+	short targetPosition;
+};
 
 typedef uint64_t bitboard;
 
@@ -60,7 +65,9 @@ public:
 	
 	Board();
 	void printBitboard();
-	void move(const char* move);
+	void moveByChar(const char* move);
+	void doMove(move move);
+	void undoMove(move move);
 	bitboard getOccupied(uint8_t color);
 	uint8_t positionToIndex(const char* position);
 	Piece getPieceAt(uint8_t index);

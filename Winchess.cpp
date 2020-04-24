@@ -9,7 +9,7 @@ int main()
 	Board* board = new Board();
 	
 	MoveGeneration* generation = new MoveGeneration(&board);
-	board.move("b2b6");
+	//board.moveByChar("b2b6");
 	
 	UCI* uci = new UCI(board);
 
@@ -17,4 +17,9 @@ int main()
 	
 	
 	board.printBitboard();
+
+	for (auto i = 0; i < 10; i++)
+	{
+		std::cout << " " << i <<" ply | " << generation->perft(i) << std::endl;
+	}
 }

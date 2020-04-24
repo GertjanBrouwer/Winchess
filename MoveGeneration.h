@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include <vector>
 #include "Board.h"
 
@@ -6,12 +7,6 @@ const bitboard kNotAFile = 0b111111101111111011111110111111101111111011111110111
 const bitboard kNotABFile = 0b1111110011111100111111001111110011111100111111001111110011111100;
 const bitboard kNotHFile = 0b0111111101111111011111110111111101111111011111110111111101111111;
 const bitboard kNotGHFile = 0b0011111100111111001111110011111100111111001111110011111100111111;
-
-struct move
-{
-	short startPosition;
-	short targetPosition;
-};
 
 class MoveGeneration
 {
@@ -41,5 +36,7 @@ public:
 	bool isInCheck(int square);
 	bitboard getEnPassant(int square);
 	bitboard getCastlingMoves(uint8_t square);
+
+	int perft(int depth);
 
 };

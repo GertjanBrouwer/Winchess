@@ -30,22 +30,50 @@ Board::Board()
 // resulting in : 000000001111011100001000
 //
 // When formatting into a board it looks like this : 00000000 11110111 00001000
-void Board::move(const char* move)
+void Board::moveByChar(const char* moveChar)
 {
-	uint8_t startPosition = positionToIndex(move);
-	uint8_t targetPosition = positionToIndex(&move[2]);
-	Piece movePiece = getPieceAt(startPosition);
-	if(movePiece.color < 0)
+	uint8_t startPosition = positionToIndex(moveChar);
+	uint8_t targetPosition = positionToIndex(&moveChar[2]);
+	doMove({startPosition, targetPosition});
+
+void Board::doMove(::move move)
+{
+	int from = move.startPosition;
+	int to = move.targetPosition;
+	Piece piece = getPieceAt(from);
+
+
+	// Check if piece exists on location
+	if(piece.color < 0)
 		return;
-	pieces[movePiece.color][movePiece.type] = (pieces[movePiece.color][movePiece.type] - ((bitboard)1 << startPosition)) + ((bitboard)1 << targetPosition);
+
+	//@TODO handle captures
+	//@TODO handle castling 
+	//@TODO handle en passant
+	//@TODO handle promotions	
+
+	pieces[piece.color][piece.type] = (pieces[piece.color][piece.type] - ((bitboard)1 << from)) + ((bitboard)1 << to);
+
+	turn = (PieceColor) (1 - turn);
+
+	//@TODO handle captures
 }
 
+void Board::undoMove(::move move)
+{
+
+	doMove({move.targetPosition, move.startPosition});
+	//@TODO handle undo move
+	//@TODO handle captures
+	//@TODO handle castling
+	//@TODO handle en passant
+	//@TODO handle promotions	
+}
 
 void Board::updateCombinedBitboard()
 {
 	// @TODO Cache and update combined bit boards here (Occupied (by color), AllPieces, Empty?, etc..)
 }
-
 
 bitboard Board::getOccupied(uint8_t color)
 {
@@ -241,7 +269,6 @@ std::string Board::intToString(int& i)
 
 	return ss.str();
 }
-
 void Board::printBitboard()
 {
 	char result[64];
