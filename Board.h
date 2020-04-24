@@ -26,8 +26,15 @@ enum PieceType
 	Pawn,
 	Knight,
 	Bishop,
+	Rook,
 	Queen,
 	King
+};
+
+enum PieceColor
+{
+	White, 
+	Black
 };
 
 struct Piece
@@ -39,12 +46,13 @@ struct Piece
 class Board
 {
 public:
+	PieceColor turn = PieceColor::White;
 	bitboard pieces[2][6];
 
 	Board();
 	void printBitboard();
 	void move(const char* move);
-	bitboard getOccupiedBoard(uint8_t color);
+	bitboard getOccupied(uint8_t color);
 	uint8_t positionToIndex(const char* position);
 	Piece getPieceAt(uint8_t index);
 	void setBoard(std::string fen);

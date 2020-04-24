@@ -20,7 +20,16 @@ public:
 	Board* board;
 
 	MoveGeneration(Board *board);
-	std::vector<move> GetAllMoves(uint8_t color);
-	bitboard GetPawnMoves(uint8_t position, uint8_t color);
-	bitboard GetKnightMoves(uint8_t position);
+
+	std::vector<move> getAllMoves();
+	bitboard getPawnMoves(uint8_t position);
+	bitboard getKnightMoves(uint8_t position);
+	bitboard getRookMoves(uint8_t position);
+
+	bitboard northOccluded(bitboard board);
+	bitboard eastOccluded(bitboard board);
+	bitboard southOccluded(bitboard board);
+	bitboard westOccluded(bitboard board);
+
+	bitboard northEastOccluded
 };

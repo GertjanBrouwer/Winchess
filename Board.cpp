@@ -40,7 +40,7 @@ void Board::move(const char* move)
 	pieces[movePiece.color][movePiece.type] = (pieces[movePiece.color][movePiece.type] - ((bitboard)1 << startPosition)) + ((bitboard)1 << targetPosition);
 }
 
-bitboard Board::getOccupiedBoard(uint8_t color)
+bitboard Board::getOccupied(uint8_t color)
 {
 	bitboard result = 0;
 	for(size_t index = 0; index < 6; index++)
@@ -48,7 +48,7 @@ bitboard Board::getOccupiedBoard(uint8_t color)
 		result |= pieces[color][index];
 	}
 
-	return ~result;
+	return result;
 }
 
 uint8_t Board::positionToIndex(const char* position)

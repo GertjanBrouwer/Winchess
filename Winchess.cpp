@@ -9,8 +9,7 @@ int main()
 	Board* board = new Board();
 	
 	MoveGeneration* generation = new MoveGeneration(&board);
-	generation->GetAllMoves(0);
-	
+	board.move("a1d4");
 	
 	UCI* uci = new UCI(board);
 
