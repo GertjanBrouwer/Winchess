@@ -1,4 +1,4 @@
-#include "Board.h" 
+#include "Board.h"
 
 Board::Board()
 {
@@ -28,23 +28,49 @@ Board::Board()
 // resulting in : 000000001111011100001000
 //
 // When formatting into a board it looks like this : 00000000 11110111 00001000
-void Board::move(const char* move)
+void Board::moveByChar(const char* moveChar)
 {
-	uint8_t startPosition = positionToIndex(move);
-	uint8_t targetPosition = positionToIndex(&move[2]);
-	Piece movePiece = getPieceAt(startPosition);
-	if(movePiece.color < 0) 
-		return;
-	pieces[movePiece.color][movePiece.type] =
-		(pieces[movePiece.color][movePiece.type] - ((bitboard)1 << startPosition)) + ((bitboard)1 << targetPosition);
+	uint8_t startPosition = positionToIndex(moveChar);
+	uint8_t targetPosition = positionToIndex(&moveChar[2]);
+	doMove({startPosition, targetPosition});
 }
 
+void Board::doMove(::move move)
+{
+	int from = move.startPosition;
+	int to = move.targetPosition;
+	Piece piece = getPieceAt(from);
+
+
+	// Check if piece exists on location
+	if(piece.color < 0)
+		return;
+
+	//@TODO handle captures
+	//@TODO handle castling 
+	//@TODO handle en passant
+	//@TODO handle promotions	
+
+	pieces[piece.color][piece.type] = (pieces[piece.color][piece.type] - ((bitboard)1 << from)) + ((bitboard)1 << to);
+
+	turn = (PieceColor) (1 - turn);
+}
+
+void Board::undoMove(::move move)
+{
+
+	doMove({move.targetPosition, move.startPosition});
+	//@TODO handle undo move
+	//@TODO handle captures
+	//@TODO handle castling
+	//@TODO handle en passant
+	//@TODO handle promotions	
+}
 
 void Board::updateCombinedBitboard()
 {
 	// @TODO Cache and update combined bit boards here (Occupied (by color), AllPieces, Empty?, etc..)
 }
-
 
 bitboard Board::getOccupied(uint8_t color)
 {
@@ -73,7 +99,7 @@ bitboard Board::getAllPieces()
 uint8_t Board::positionToIndex(const char* position)
 {
 	// Calculate index using ASCII values (a = 97 and 1 = 49)
-	// b : 98 - 97 = 1 
+	// b : 98 - 97 = 1
 	// 2 : (50 - 49) * 8 = 8
 	// b2 results in 8 + 1 = 9
 	return position[0] - 97 + (position[1] - 49) * 8;
@@ -93,9 +119,8 @@ Piece Board::getPieceAt(uint8_t index)
 		}
 	}
 
-	return {-1,-1};
+	return {-1, -1};
 }
-
 
 void Board::printBitboard()
 {
@@ -121,9 +146,11 @@ void Board::printBitboard()
 			std::cout << ' ' << result[index] << ' ';
 			if((index + 1) % 8 == 0 && index + 1 != 8)
 			{
-				std::cout << row + 1 << "|\n"  << "|" << row;
+				std::cout << row + 1 << "|\n"
+						  << "|" << row;
 			}
-			else if(index + 1 != 8) std::cout << "";
+			else if(index + 1 != 8)
+				std::cout << "";
 		}
 	}
 	std::cout << "1|\n|  A  B  C  D  E  F  G  H  |\n";
