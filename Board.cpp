@@ -34,10 +34,21 @@ void Board::move(const char* move)
 {
 	uint8_t startPosition = positionToIndex(move);
 	uint8_t targetPosition = positionToIndex(&move[2]);
-	piece movePiece = getPieceAt(startPosition);
+	Piece movePiece = getPieceAt(startPosition);
 	if(movePiece.color < 0)
 		return;
 	pieces[movePiece.color][movePiece.type] = (pieces[movePiece.color][movePiece.type] - ((bitboard)1 << startPosition)) + ((bitboard)1 << targetPosition);
+}
+
+bitboard Board::getOccupiedBoard(uint8_t color)
+{
+	bitboard result = 0;
+	for(size_t index = 0; index < 6; index++)
+	{
+		result |= pieces[color][index];
+	}
+
+	return ~result;
 }
 
 uint8_t Board::positionToIndex(const char* position)
@@ -49,7 +60,7 @@ uint8_t Board::positionToIndex(const char* position)
 	return position[0] - 97 + (position[1] - 49) * 8;
 }
 
-piece Board::getPieceAt(uint8_t index)
+Piece Board::getPieceAt(uint8_t index)
 {
 	for(uint8_t color = 0; color < 2; color++)
 	{
@@ -217,7 +228,7 @@ void Board::printBitboard()
 
 	for(uint8_t index = 0; index < 64; index++)
 	{
-		piece piece = getPieceAt(index);
+		Piece piece = getPieceAt(index);
 		if(piece.color >= 0)
 		{
 			result[index] = (piece.color == 0) ? toupper(kPieceChars[piece.type]) : kPieceChars[piece.type];

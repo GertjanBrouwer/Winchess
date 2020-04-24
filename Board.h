@@ -21,7 +21,16 @@ const char kPieceChars[] = {'p', 'n', 'b', 'r', 'q', 'k'};
 
 const std::map<char, uint8_t> types = {{'p', 0}, {'n', 1}, {'b', 2}, {'r', 3}, {'q', 4}, {'k', 5}};
 
-struct piece
+enum PieceType
+{
+	Pawn,
+	Knight,
+	Bishop,
+	Queen,
+	King
+};
+
+struct Piece
 {
 	short color;
 	short type;
@@ -35,8 +44,9 @@ public:
 	Board();
 	void printBitboard();
 	void move(const char* move);
+	bitboard getOccupiedBoard(uint8_t color);
 	uint8_t positionToIndex(const char* position);
-	piece getPieceAt(uint8_t index);
+	Piece getPieceAt(uint8_t index);
 	void setBoard(std::string fen);
 	std::string getFen();
 	std::string intToString(int &i);
