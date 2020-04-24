@@ -6,6 +6,7 @@ int main()
 {
 	Board board;
 	MoveGeneration* generation = new MoveGeneration(&board);
-	generation->GetAllMoves(0);
+	board.move("a1d4");
+	generation->getAllMoves();
 	board.printBitboard();
 }
