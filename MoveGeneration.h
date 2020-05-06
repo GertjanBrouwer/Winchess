@@ -10,12 +10,9 @@ const bitboard kNotGHFile = 0b00111111001111110011111100111111001111110011111100
 
 class MoveGeneration
 {
-public:
+private:
 	Board* board;
-
-	MoveGeneration(Board *board);
-
-	std::vector<move> getAllMoves();
+	
 	bitboard getPawnMoves(uint8_t position);
 	bitboard getKnightMoves(uint8_t position);
 	bitboard getBishopMoves(uint8_t position);
@@ -32,11 +29,15 @@ public:
 	bitboard southEastOccluded(bitboard board);
 	bitboard northWestOccluded(bitboard board);
 	bitboard southWestOccluded(bitboard board);
-	
-	bool isInCheck(int square);
+
 	bitboard getEnPassant(int square);
 	bitboard getCastlingMoves(uint8_t square);
 
-	int perft(int depth);
+public:
+	MoveGeneration(Board *board);
+	std::vector<Move> getAllMoves();
 
+	bool isInCheck(int square);
+
+	int perft(int depth);
 };

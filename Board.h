@@ -5,7 +5,7 @@
 #include <vector>
 
 
-struct move
+struct Move
 {
 	short startPosition;
 	short targetPosition;
@@ -57,17 +57,17 @@ class Board
 public:
 	PieceColor turn = White;
 	bitboard pieces[2][6];
-	bool wQueenSide;
-	bool wKingSide;
-	bool bQueenSide;
-	bool bKingSide;
-	std::stack<move> moves;
+	bool wQueenSide = true;
+	bool wKingSide = true;
+	bool bQueenSide = true;
+	bool bKingSide = true;
+	std::stack<Move> moves;
 	
 	Board();
 	void printBitboard();
 	void moveByChar(const char* move);
-	void doMove(move move);
-	void undoMove(move move);
+	void doMove(Move move);
+	void undoMove(Move move);
 	bitboard getOccupied(uint8_t color);
 	uint8_t positionToIndex(const char* position);
 	Piece getPieceAt(uint8_t index);
