@@ -35,7 +35,7 @@ void Board::moveByChar(const char* moveChar)
 	doMove({startPosition, targetPosition});
 }
 
-void Board::doMove(::move move)
+void Board::doMove(Move move)
 {
 	int from = move.startPosition;
 	int to = move.targetPosition;
@@ -56,11 +56,11 @@ void Board::doMove(::move move)
 	turn = (PieceColor) (1 - turn);
 }
 
-void Board::undoMove(::move move)
+void Board::undoMove(Move move)
 {
 
 	doMove({move.targetPosition, move.startPosition});
-	//@TODO handle undo move
+	//@TODO handle undo Move
 	//@TODO handle captures
 	//@TODO handle castling
 	//@TODO handle en passant

@@ -1,17 +1,19 @@
 ﻿#include <iostream>
+#include <thread>
+
 #include "Board.h"
 #include "MoveGeneration.h"
+#include "UCI.h"
 
 int main()
 {
-	Board board;
-	MoveGeneration* generation = new MoveGeneration(&board);
-	//board.moveByChar("b2b6");
-	generation->getAllMoves();
-	board.printBitboard();
+	Board* board = new Board();
 
-	for (auto i = 0; i < 10; i++)
-	{
-		std::cout << " " << i <<" ply | " << generation->perft(i) << std::endl;
-	}
+	MoveGeneration* generation = new MoveGeneration(board);
+
+	board->printBitboard();
+	auto moves = generation->getAllMoves();
+
+
+	std::cout << "Amount of found moves: " << moves.size() << std::endl;
 }

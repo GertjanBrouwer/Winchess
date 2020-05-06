@@ -9,31 +9,46 @@ MoveGeneration::MoveGeneration(Board* board)
 // Function to calculate the absolute difference
 inline int8_t absDiff(int a, int b)
 {
-	return (a < b) ? b - a : a - b;
+	return a < b ? b - a : a - b;
+}
+
+inline int getBitIndex(bitboard board)
+{
+	for(uint8_t pos = 0; pos < 64; pos++)
+	{
+		if(board & (bitboard)1 << pos)
+		{
+			return pos;
+		}
+	}
+
+	throw _exception();
 }
 
 
-std::vector<move> MoveGeneration::getAllMoves()
+
+
+std::vector<Move> MoveGeneration::getAllMoves()
 {
-	std::vector<move> legalMoves;
+	std::vector<Move> legalMoves;
 	for (uint8_t current = 0; current < 64; current++)
 	{
 		Piece piece = board->getPieceAt(current);
 		if (piece.color != board->turn)
 			continue;
 		bitboard moves = 0;
-		if(piece.type == Pawn)
+		if (piece.type == Pawn)
 			moves = getPawnMoves(current);
-		if(piece.type == Knight)
+		if (piece.type == Knight)
 			moves = getKnightMoves(current);
-		if(piece.type == Bishop)
+		if (piece.type == Bishop)
 			moves = getBishopMoves(current);
-		if(piece.type == Rook)
+		if (piece.type == Rook)
 			moves = getRookMoves(current);
-		if(piece.type == Queen)
+		if (piece.type == Queen)
 			moves = getQueenMoves(current);
-		if(piece.type == King)
-			moves = getKingMoves(current);
+		if (piece.type == King)
+			moves = getKingMoves(current) | getCastlingMoves(current);
 		if (moves == 0)
 			continue;
 
@@ -41,7 +56,25 @@ std::vector<move> MoveGeneration::getAllMoves()
 		{
 			if (moves & (bitboard)1 << destination & ~board->getOccupied(board->turn))
 			{
-				legalMoves.push_back({current, destination});
+				std::cout << (int)current << " to " << (int)destination << std::endl;
+
+
+				board->printBitboard();
+
+				board->pieces[board->turn][piece.type] &= ~((bitboard)1 << current);
+				board->pieces[board->turn][piece.type] |= (bitboard)1 << destination;
+
+				board->printBitboard();
+
+				bitboard b = board->pieces[board->turn][King];
+				int kingPosition = getBitIndex(b);
+				if (!isInCheck(kingPosition)) //Magic <3
+				{
+					legalMoves.push_back({current, destination});
+				}
+
+				board->pieces[board->turn][piece.type] &= ~((bitboard)1 << destination);
+				board->pieces[board->turn][piece.type] |= (bitboard)1 << current;
 			}
 		}
 	}
@@ -55,27 +88,33 @@ bitboard MoveGeneration::getPawnMoves(uint8_t position)
 	bitboard piecePosition = (bitboard)1 << position;
 	bitboard result = 0;
 
+	bitboard empty = ~this->board->getAllPieces();
+
 	// Standard moveByChar
-	if(board->turn == White)
-	{
-		result |= (piecePosition << 7) & enemyOccupied;	
-		result |= (piecePosition << 8) & ~enemyOccupied;	
-		result |= (piecePosition << 9) & enemyOccupied;	
-	}
-	else 
-	{
-		result |= (piecePosition >> 7) & enemyOccupied;	
-		result |= (piecePosition >> 8) & ~enemyOccupied;
-		result |= (piecePosition >> 9) & enemyOccupied;	
-	}
+	if (board->turn == White)
+		result |= empty & piecePosition << 8;
+	else
+		result |= empty & piecePosition >> 8;
 
 	// Double moveByChar
 	if (piecePosition & kStartPawn & kPieceColor[board->turn])
 	{
-		if(board->turn == White)
-			result |= (piecePosition << 16) & ~enemyOccupied;
+		if (board->turn == White)
+			result |= empty & result << 8;
 		else
-			result |= (piecePosition >> 16) & ~enemyOccupied;
+			result |= empty & result >> 8;
+	}
+
+	// Captures moveByChar
+	if (board->turn == White)
+	{
+		result |= piecePosition << 7 & enemyOccupied;
+		result |= piecePosition << 9 & enemyOccupied;
+	}
+	else
+	{
+		result |= piecePosition >> 7 & enemyOccupied;
+		result |= piecePosition >> 9 & enemyOccupied;
 	}
 
 	return result;
@@ -86,14 +125,14 @@ bitboard MoveGeneration::getKnightMoves(uint8_t position)
 	bitboard piecePosition = (bitboard)1 << position;
 	bitboard result = 0;
 
-	result |= (piecePosition << 17) & kNotAFile;
-	result |= (piecePosition << 10) & kNotABFile;
-	result |= (piecePosition >> 6) & kNotABFile;
-	result |= (piecePosition >> 15) & kNotAFile;
-	result |= (piecePosition << 15) & kNotHFile;
-	result |= (piecePosition << 6) & kNotGHFile;
-	result |= (piecePosition >> 10) & kNotGHFile;
-	result |= (piecePosition >> 17) & kNotHFile;
+	result |= piecePosition << 17 & kNotAFile;
+	result |= piecePosition << 10 & kNotABFile;
+	result |= piecePosition >> 6 & kNotABFile;
+	result |= piecePosition >> 15 & kNotAFile;
+	result |= piecePosition << 15 & kNotHFile;
+	result |= piecePosition << 6 & kNotGHFile;
+	result |= piecePosition >> 10 & kNotGHFile;
+	result |= piecePosition >> 17 & kNotHFile;
 	return result;
 }
 
@@ -140,13 +179,13 @@ bitboard MoveGeneration::getKingMoves(uint8_t position)
 	bitboard result = 0;
 
 	result |= piecePosition << 8;
-	result |= (piecePosition << 9) & kNotAFile;
-	result |= (piecePosition << 1) & kNotAFile;
-	result |= (piecePosition >> 7) & kNotAFile;
+	result |= piecePosition << 9 & kNotAFile;
+	result |= piecePosition << 1 & kNotAFile;
+	result |= piecePosition >> 7 & kNotAFile;
 	result |= piecePosition >> 8;
-	result |= (piecePosition >> 9) & kNotHFile;
-	result |= (piecePosition >> 1) & kNotHFile;
-	result |= (piecePosition << 7) & kNotHFile;
+	result |= piecePosition >> 9 & kNotHFile;
+	result |= piecePosition >> 1 & kNotHFile;
+	result |= piecePosition << 7 & kNotHFile;
 
 	return result;
 }
@@ -155,13 +194,13 @@ bitboard MoveGeneration::northOccluded(bitboard board)
 {
 	bitboard empty = ~this->board->getOccupied(this->board->turn);
 	bitboard enemyUnoccupied = ~this->board->getOccupied(1 - this->board->turn);
-	board |= empty & ((board & enemyUnoccupied) << 8);
-	board |= empty & ((board & enemyUnoccupied) << 8);
-	board |= empty & ((board & enemyUnoccupied) << 8);
-	board |= empty & ((board & enemyUnoccupied) << 8);
-	board |= empty & ((board & enemyUnoccupied) << 8);
-	board |= empty & ((board & enemyUnoccupied) << 8);
-	board |= empty & ((board & enemyUnoccupied) << 8);
+	board |= empty & (board & enemyUnoccupied) << 8;
+	board |= empty & (board & enemyUnoccupied) << 8;
+	board |= empty & (board & enemyUnoccupied) << 8;
+	board |= empty & (board & enemyUnoccupied) << 8;
+	board |= empty & (board & enemyUnoccupied) << 8;
+	board |= empty & (board & enemyUnoccupied) << 8;
+	board |= empty & (board & enemyUnoccupied) << 8;
 	return board;
 }
 
@@ -169,13 +208,13 @@ bitboard MoveGeneration::eastOccluded(bitboard board)
 {
 	bitboard empty = ~this->board->getOccupied(this->board->turn) & kNotAFile;
 	bitboard enemyUnoccupied = ~this->board->getOccupied(1 - this->board->turn);
-	board |= empty & ((board & enemyUnoccupied) << 1);
-	board |= empty & ((board & enemyUnoccupied) << 1);
-	board |= empty & ((board & enemyUnoccupied) << 1);
-	board |= empty & ((board & enemyUnoccupied) << 1);
-	board |= empty & ((board & enemyUnoccupied) << 1);
-	board |= empty & ((board & enemyUnoccupied) << 1);
-	board |= empty & ((board & enemyUnoccupied) << 1);
+	board |= empty & (board & enemyUnoccupied) << 1;
+	board |= empty & (board & enemyUnoccupied) << 1;
+	board |= empty & (board & enemyUnoccupied) << 1;
+	board |= empty & (board & enemyUnoccupied) << 1;
+	board |= empty & (board & enemyUnoccupied) << 1;
+	board |= empty & (board & enemyUnoccupied) << 1;
+	board |= empty & (board & enemyUnoccupied) << 1;
 	return board;
 }
 
@@ -183,13 +222,13 @@ bitboard MoveGeneration::southOccluded(bitboard board)
 {
 	bitboard empty = ~this->board->getOccupied(this->board->turn);
 	bitboard enemyUnoccupied = ~this->board->getOccupied(1 - this->board->turn);
-	board |= empty & ((board & enemyUnoccupied) >> 8);
-	board |= empty & ((board & enemyUnoccupied) >> 8);
-	board |= empty & ((board & enemyUnoccupied) >> 8);
-	board |= empty & ((board & enemyUnoccupied) >> 8);
-	board |= empty & ((board & enemyUnoccupied) >> 8);
-	board |= empty & ((board & enemyUnoccupied) >> 8);
-	board |= empty & ((board & enemyUnoccupied) >> 8);
+	board |= empty & (board & enemyUnoccupied) >> 8;
+	board |= empty & (board & enemyUnoccupied) >> 8;
+	board |= empty & (board & enemyUnoccupied) >> 8;
+	board |= empty & (board & enemyUnoccupied) >> 8;
+	board |= empty & (board & enemyUnoccupied) >> 8;
+	board |= empty & (board & enemyUnoccupied) >> 8;
+	board |= empty & (board & enemyUnoccupied) >> 8;
 	return board;
 }
 
@@ -197,13 +236,13 @@ bitboard MoveGeneration::westOccluded(bitboard board)
 {
 	bitboard empty = ~this->board->getOccupied(this->board->turn) & kNotHFile;
 	bitboard enemyUnoccupied = ~this->board->getOccupied(1 - this->board->turn);
-	board |= empty & ((board & enemyUnoccupied) >> 1);
-	board |= empty & ((board & enemyUnoccupied) >> 1);
-	board |= empty & ((board & enemyUnoccupied) >> 1);
-	board |= empty & ((board & enemyUnoccupied) >> 1);
-	board |= empty & ((board & enemyUnoccupied) >> 1);
-	board |= empty & ((board & enemyUnoccupied) >> 1);
-	board |= empty & ((board & enemyUnoccupied) >> 1);
+	board |= empty & (board & enemyUnoccupied) >> 1;
+	board |= empty & (board & enemyUnoccupied) >> 1;
+	board |= empty & (board & enemyUnoccupied) >> 1;
+	board |= empty & (board & enemyUnoccupied) >> 1;
+	board |= empty & (board & enemyUnoccupied) >> 1;
+	board |= empty & (board & enemyUnoccupied) >> 1;
+	board |= empty & (board & enemyUnoccupied) >> 1;
 	return board;
 }
 
@@ -211,13 +250,13 @@ bitboard MoveGeneration::northEastOccluded(bitboard board)
 {
 	bitboard empty = ~this->board->getOccupied(this->board->turn) & kNotAFile;
 	bitboard enemyUnoccupied = ~this->board->getOccupied(1 - this->board->turn);
-	board |= empty & ((board & enemyUnoccupied) << 9);
-	board |= empty & ((board & enemyUnoccupied) << 9);
-	board |= empty & ((board & enemyUnoccupied) << 9);
-	board |= empty & ((board & enemyUnoccupied) << 9);
-	board |= empty & ((board & enemyUnoccupied) << 9);
-	board |= empty & ((board & enemyUnoccupied) << 9);
-	board |= empty & ((board & enemyUnoccupied) << 9);
+	board |= empty & (board & enemyUnoccupied) << 9;
+	board |= empty & (board & enemyUnoccupied) << 9;
+	board |= empty & (board & enemyUnoccupied) << 9;
+	board |= empty & (board & enemyUnoccupied) << 9;
+	board |= empty & (board & enemyUnoccupied) << 9;
+	board |= empty & (board & enemyUnoccupied) << 9;
+	board |= empty & (board & enemyUnoccupied) << 9;
 	return board;
 }
 
@@ -225,13 +264,13 @@ bitboard MoveGeneration::southEastOccluded(bitboard board)
 {
 	bitboard empty = ~this->board->getOccupied(this->board->turn) & kNotAFile;
 	bitboard enemyUnoccupied = ~this->board->getOccupied(1 - this->board->turn);
-	board |= empty & ((board & enemyUnoccupied) >> 7);
-	board |= empty & ((board & enemyUnoccupied) >> 7);
-	board |= empty & ((board & enemyUnoccupied) >> 7);
-	board |= empty & ((board & enemyUnoccupied) >> 7);
-	board |= empty & ((board & enemyUnoccupied) >> 7);
-	board |= empty & ((board & enemyUnoccupied) >> 7);
-	board |= empty & ((board & enemyUnoccupied) >> 7);
+	board |= empty & (board & enemyUnoccupied) >> 7;
+	board |= empty & (board & enemyUnoccupied) >> 7;
+	board |= empty & (board & enemyUnoccupied) >> 7;
+	board |= empty & (board & enemyUnoccupied) >> 7;
+	board |= empty & (board & enemyUnoccupied) >> 7;
+	board |= empty & (board & enemyUnoccupied) >> 7;
+	board |= empty & (board & enemyUnoccupied) >> 7;
 	return board;
 }
 
@@ -239,13 +278,13 @@ bitboard MoveGeneration::northWestOccluded(bitboard board)
 {
 	bitboard empty = ~this->board->getOccupied(this->board->turn) & kNotHFile;
 	bitboard enemyUnoccupied = ~this->board->getOccupied(1 - this->board->turn);
-	board |= empty & ((board & enemyUnoccupied) << 7);
-	board |= empty & ((board & enemyUnoccupied) << 7);
-	board |= empty & ((board & enemyUnoccupied) << 7);
-	board |= empty & ((board & enemyUnoccupied) << 7);
-	board |= empty & ((board & enemyUnoccupied) << 7);
-	board |= empty & ((board & enemyUnoccupied) << 7);
-	board |= empty & ((board & enemyUnoccupied) << 7);
+	board |= empty & (board & enemyUnoccupied) << 7;
+	board |= empty & (board & enemyUnoccupied) << 7;
+	board |= empty & (board & enemyUnoccupied) << 7;
+	board |= empty & (board & enemyUnoccupied) << 7;
+	board |= empty & (board & enemyUnoccupied) << 7;
+	board |= empty & (board & enemyUnoccupied) << 7;
+	board |= empty & (board & enemyUnoccupied) << 7;
 	return board;
 }
 
@@ -253,13 +292,13 @@ bitboard MoveGeneration::southWestOccluded(bitboard board)
 {
 	bitboard empty = ~this->board->getOccupied(this->board->turn) & kNotHFile;
 	bitboard enemyUnoccupied = ~this->board->getOccupied(1 - this->board->turn);
-	board |= empty & ((board & enemyUnoccupied) >> 9);
-	board |= empty & ((board & enemyUnoccupied) >> 9);
-	board |= empty & ((board & enemyUnoccupied) >> 9);
-	board |= empty & ((board & enemyUnoccupied) >> 9);
-	board |= empty & ((board & enemyUnoccupied) >> 9);
-	board |= empty & ((board & enemyUnoccupied) >> 9);
-	board |= empty & ((board & enemyUnoccupied) >> 9);
+	board |= empty & (board & enemyUnoccupied) >> 9;
+	board |= empty & (board & enemyUnoccupied) >> 9;
+	board |= empty & (board & enemyUnoccupied) >> 9;
+	board |= empty & (board & enemyUnoccupied) >> 9;
+	board |= empty & (board & enemyUnoccupied) >> 9;
+	board |= empty & (board & enemyUnoccupied) >> 9;
+	board |= empty & (board & enemyUnoccupied) >> 9;
 	return board;
 }
 
@@ -267,7 +306,7 @@ bitboard MoveGeneration::southWestOccluded(bitboard board)
 bool MoveGeneration::isInCheck(int square)
 {
 	//Check if is king
-	if (board->pieces[0][King] & (bitboard)1 << square)
+	if (board->pieces[board->turn][King] & (bitboard)1 << square)
 	{
 		int8_t opponentColor = 1 - board->turn;
 
@@ -278,6 +317,12 @@ bool MoveGeneration::isInCheck(int square)
 			return true;
 		if (getRookMoves(square) & board->pieces[opponentColor][Rook])
 			return true;
+		if (getBishopMoves(square) & board->pieces[opponentColor][Bishop])
+			return true;
+		if (getQueenMoves(square) & board->pieces[opponentColor][Queen])
+			return true;
+		if (getKingMoves(square) & board->pieces[opponentColor][King])
+			return true;
 	}
 	return false;
 }
@@ -286,24 +331,24 @@ bool MoveGeneration::isInCheck(int square)
 bitboard MoveGeneration::getEnPassant(int square)
 {
 	// Ensure that the previous moveByChar was a pawn advance of 2 squares
-	move prevMove = board->moves.top();
+	Move prevMove = board->moves.top();
 
 	bitboard pawns = board->pieces[White][Pawn] | board->pieces[Black][Pawn];
 
-	if (absDiff(prevMove.startPosition / 8, prevMove.targetPosition / 8) == 2 &&	// Check if opposite moveByChar was length of 2
-		(pawns & (bitboard)prevMove.targetPosition) &&									// Check if a opposite pawn was moved
-		(square / 8 == prevMove.targetPosition / 8) &&									// Check if pawn is on the same row
-		absDiff(square % 8, prevMove.targetPosition % 8) == 1)						// Check if pawn is next to opposite pawn
+	if (absDiff(prevMove.startPosition / 8, prevMove.targetPosition / 8) == 2 &&
+		// Check if opposite moveByChar was length of 2
+		pawns & (bitboard)prevMove.targetPosition && // Check if a opposite pawn was moved
+		square / 8 == prevMove.targetPosition / 8 && // Check if pawn is on the same row
+		absDiff(square % 8, prevMove.targetPosition % 8) == 1) // Check if pawn is next to opposite pawn
 	{
 		// For white pawns - ensure the king isn't in check
-		if(prevMove.targetPosition / 8 == 3) // Check if on white en passant row
+		if (prevMove.targetPosition / 8 == 3) // Check if on white en passant row
 			return (bitboard)1 << prevMove.targetPosition - 8;
-		else 
+		else
 			return (bitboard)1 << prevMove.targetPosition + 8;
 	}
 	return 0;
 }
-
 
 // Function to return a 64-bit integer of all the castling moves
 bitboard MoveGeneration::getCastlingMoves(uint8_t square)
@@ -311,41 +356,42 @@ bitboard MoveGeneration::getCastlingMoves(uint8_t square)
 	bitboard moves = 0;
 
 	// White king castling
-	if (square == 60)
+	if (square == 4)
 	{
 		// Make sure that there are no blocking pieces to the queenside
-		if (board->wQueenSide && !(board->getAllPieces() & 112)) //0111 0000‬
+		if (board->wQueenSide && !(board->getAllPieces() & 14)) //0000 1110‬
 		{
 			// Pretend that there are kings at the squares where it castles through
-			board->pieces[White][King] &= 48; //0011 0000
+			board->pieces[White][King] &= 12; //0000 1100
 			board->updateCombinedBitboard();
 
 			// Ensure that the king does not castle through check
-			if (!isInCheck(58) && !isInCheck(59) && !isInCheck(60))
-				moves &= 32; // 0010 0000
+			if (!isInCheck(2) && !isInCheck(3) && !isInCheck(4))
+				moves |= 4; // 0000 0100
 
-			board->pieces[White][King] &= ~48; //0011 0000
+			// Remove checked kings
+			board->pieces[White][King] &= ~12; //0000 1100
 
 			board->updateCombinedBitboard();
 		}
 
 		// Make sure that there are no blocking pieces to the kingside
-		if (board->wKingSide && !(board->getAllPieces() & 6)) //0000 0110‬
+		if (board->wKingSide && !(board->getAllPieces() & 96)) //0110 0000‬
 		{
 			// Pretend that there are kings at the squares where it castles through
-			board->pieces[White][King] &= 6; //0000 0110‬
+			board->pieces[White][King] &= 96; // 0110‬ 0000
 			board->updateCombinedBitboard();
 
 			// Ensure that the king does not castle through check
-			if (!isInCheck(60) && !isInCheck(61) && !isInCheck(62))
-				moves &= 2; // 00010
+			if (!isInCheck(4) && !isInCheck(5) && !isInCheck(6))
+				moves |= 64; // 0100 0000
 		}
 	}
 		// Black king castling
-	else if (square == 4)
+	else if (square == 60)
 	{
 		// Make sure that there are no blocking pieces to the queenside
-		if (board->bQueenSide && !(board->getAllPieces() & 8070450532247928832)) //0111 0000‬
+		if (board->wQueenSide && !(board->getAllPieces() & 8070450532247928832)) //0111 0000‬
 		{
 			// Pretend that there are kings at the squares where it castles through
 			board->pieces[Black][King] &= 3458764513820540928; //0011 0000
@@ -361,7 +407,7 @@ bitboard MoveGeneration::getCastlingMoves(uint8_t square)
 		}
 
 		// Make sure that there are no blocking pieces to the kingside
-		if (board->bKingSide && !(board->getAllPieces() & 432345564227567616)) //0110 0000 ‬
+		if (board->wKingSide && !(board->getAllPieces() & 432345564227567616)) //0110 0000 ‬
 		{
 			// Pretend that there are kings at the squares where it castles through
 			board->pieces[Black][King] &= 432345564227567616; // 0110‬ 0000
@@ -378,20 +424,19 @@ bitboard MoveGeneration::getCastlingMoves(uint8_t square)
 
 int MoveGeneration::perft(int depth)
 {
-		bitboard nodes = 0;
+	bitboard nodes = 0;
 
-		if(depth == 0)
-			return 1;
+	if (depth == 0)
+		return 1;
 
-		auto move_list = getAllMoves();
-		for(int i = 0; i < move_list.size(); i++)
-		{
-			board->doMove(move_list[i]);
-			int n = board->pieces[board->turn][King];
-			if(!isInCheck(log2(n & -n) + 1))
-				nodes += perft(depth - 1);
-			board->undoMove(move_list[i]);
-		}
-		return nodes;
-	
+	auto move_list = getAllMoves();
+	for (int i = 0; i < move_list.size(); i++)
+	{
+		board->doMove(move_list[i]);
+		int n = board->pieces[board->turn][King];
+		if (!isInCheck(log2(n & -n) + 1))
+			nodes += perft(depth - 1);
+		board->undoMove(move_list[i]);
+	}
+	return nodes;
 }
