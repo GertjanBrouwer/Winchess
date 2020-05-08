@@ -35,8 +35,7 @@ void Board::move(const char* move)
 	piece movePiece = getPieceAt(startPosition);
 	if(movePiece.color < 0)
 		return;
-	pieces[movePiece.color][movePiece.type] =
-			(pieces[movePiece.color][movePiece.type] - ((bitboard)1 << startPosition)) + ((bitboard)1 << targetPosition);
+	pieces[movePiece.color][movePiece.type] = (pieces[movePiece.color][movePiece.type] - ((bitboard)1 << startPosition)) + ((bitboard)1 << targetPosition);
 }
 
 uint8_t Board::positionToIndex(const char* position)
@@ -89,11 +88,9 @@ void Board::printBitboard()
 			std::cout << ' ' << result[index] << ' ';
 			if((index + 1) % 8 == 0 && index + 1 != 8)
 			{
-				std::cout << row + 1 << "|\n"
-									<< "|" << row;
+				std::cout << row + 1 << "|\n" << "|" << row;
 			}
-			else if(index + 1 != 8)
-				std::cout << "";
+			else if(index + 1 != 8) std::cout << "";
 		}
 	}
 	std::cout << "1|\n|  A  B  C  D  E  F  G  H  |\n";
