@@ -39,7 +39,7 @@ enum PieceType
 
 enum PieceColor
 {
-	White, 
+	White,
 	Black
 };
 
@@ -54,12 +54,12 @@ class Board
 public:
 	PieceColor turn = White;
 	bitboard pieces[2][6];
-	bool wQueenSide = true;
-	bool wKingSide = true;
-	bool bQueenSide = true;
-	bool bKingSide = true;
+	bool castleWQueenSide = true;
+	bool castleWKingSide = true;
+	bool castleBQueenSide = true;
+	bool castleBKingSide = true;
 	std::stack<Move> moves;
-	
+
 	Board();
 	void printBitboard();
 	void moveByChar(const char* move);
@@ -70,5 +70,4 @@ public:
 	Piece getPieceAt(uint8_t index);
 	bitboard getAllPieces();
 	void updateCombinedBitboard();
-
 };

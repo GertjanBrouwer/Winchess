@@ -3,7 +3,6 @@
 
 #include "Board.h"
 #include "MoveGeneration.h"
-#include "UCI.h"
 
 int main()
 {

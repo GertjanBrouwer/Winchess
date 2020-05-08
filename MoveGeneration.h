@@ -12,7 +12,7 @@ class MoveGeneration
 {
 private:
 	Board* board;
-	
+
 	bitboard getPawnMoves(uint8_t position);
 	bitboard getKnightMoves(uint8_t position);
 	bitboard getBishopMoves(uint8_t position);
@@ -34,7 +34,7 @@ private:
 	bitboard getCastlingMoves(uint8_t square);
 
 public:
-	MoveGeneration(Board *board);
+	MoveGeneration(Board* board);
 	std::vector<Move> getAllMoves();
 
 	bool isInCheck(int square);
