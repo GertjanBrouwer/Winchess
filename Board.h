@@ -26,7 +26,7 @@ struct piece
 
 class Board
 {
-public:
+	public:
 	bitboard pieces[2][6];
 
 	Board();

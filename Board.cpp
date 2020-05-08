@@ -1,4 +1,4 @@
-#include "Board.h" 
+#include "Board.h"
 
 Board::Board()
 {
@@ -33,16 +33,16 @@ void Board::move(const char* move)
 	uint8_t startPosition = positionToIndex(move);
 	uint8_t targetPosition = positionToIndex(&move[2]);
 	piece movePiece = getPieceAt(startPosition);
-	if(movePiece.color < 0) 
+	if(movePiece.color < 0)
 		return;
 	pieces[movePiece.color][movePiece.type] =
-		(pieces[movePiece.color][movePiece.type] - ((bitboard)1 << startPosition)) + ((bitboard)1 << targetPosition);
+			(pieces[movePiece.color][movePiece.type] - ((bitboard)1 << startPosition)) + ((bitboard)1 << targetPosition);
 }
 
 uint8_t Board::positionToIndex(const char* position)
 {
 	// Calculate index using ASCII values (a = 97 and 1 = 49)
-	// b : 98 - 97 = 1 
+	// b : 98 - 97 = 1
 	// 2 : (50 - 49) * 8 = 8
 	// b2 results in 8 + 1 = 9
 	return position[0] - 97 + (position[1] - 49) * 8;
@@ -62,9 +62,9 @@ piece Board::getPieceAt(uint8_t index)
 		}
 	}
 
-	return {-1,-1};
+	return {-1, -1};
 }
- 
+
 void Board::printBitboard()
 {
 	char result[64];
@@ -89,9 +89,11 @@ void Board::printBitboard()
 			std::cout << ' ' << result[index] << ' ';
 			if((index + 1) % 8 == 0 && index + 1 != 8)
 			{
-				std::cout << row + 1 << "|\n"  << "|" << row;
+				std::cout << row + 1 << "|\n"
+									<< "|" << row;
 			}
-			else if(index + 1 != 8) std::cout << "";
+			else if(index + 1 != 8)
+				std::cout << "";
 		}
 	}
 	std::cout << "1|\n|  A  B  C  D  E  F  G  H  |\n";
