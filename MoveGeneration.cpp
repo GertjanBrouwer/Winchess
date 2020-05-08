@@ -108,13 +108,13 @@ bitboard MoveGeneration::getPawnMoves(uint8_t position)
 	// Captures moveByChar
 	if (board->turn == White)
 	{
-		result |= piecePosition << 7 & enemyOccupied;
-		result |= piecePosition << 9 & enemyOccupied;
+		result |= piecePosition << 7 & enemyOccupied & kNotHFile;
+		result |= piecePosition << 9 & enemyOccupied & kNotAFile;
 	}
 	else
 	{
-		result |= piecePosition >> 7 & enemyOccupied;
-		result |= piecePosition >> 9 & enemyOccupied;
+		result |= piecePosition >> 7 & enemyOccupied & kNotAFile;
+		result |= piecePosition >> 9 & enemyOccupied & kNotHFile;
 	}
 
 	return result;
