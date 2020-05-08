@@ -17,8 +17,10 @@ public:
 	void inputUCINewGame();
 	void inputPosition(std::string inputString);
 	void inputGo();
+	void inputStop();
 	void inputPrint();
 	void getFen();
+	void inputQuit();
 
 private:
 	std::string engineName;

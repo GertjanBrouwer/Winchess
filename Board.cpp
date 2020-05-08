@@ -1,5 +1,6 @@
 #include "Board.h"
 #include <map>
+#include <sstream>
 
 Board::Board()
 {
@@ -80,7 +81,9 @@ void Board::setBoard(const char* fen)
 {
 	clearBoard();
 
+	std::map<char, uint8_t> types = {{'p', 0}, {'n', 1}, {'b', 2}, {'r', 3}, {'q', 4}, {'k',5}};
 	int currentPosition = -1;
+
 	for(uint8_t index = 0; index < strlen(fen); index++)
 	{
 		char current = fen[index];
@@ -94,14 +97,13 @@ void Board::setBoard(const char* fen)
 			currentPosition += 1;
 			short type;
 
-			short color = 0;
+			short color = 1;
 
 			if(isupper(current))
 			{
-				color = 1;
+				color = 0;
 				current = tolower(current);
 			}
-			std::map<char, uint8_t> types = {{'p', 0}, {'n', 1}, {'b', 2}, {'r', 3}, {'q', 4}, {'k',5}};
 
 			type = types[current];
 
@@ -114,7 +116,7 @@ std::string Board::getFen()
 {
 	char resultList[64];
 	std::string result;
-	uint8_t counter = 0;
+	int counter = 0;
 
 	for(uint8_t index = 0; index < 64; index++)
 	{
@@ -131,24 +133,35 @@ std::string Board::getFen()
 	{
 		if(i % 8 == 0 && i != 64 && i != 0)
 		{
-			result += "/";
+			if(counter > 0)
+			{
+				result += toString(counter);
+				counter = 0;
+			}
+			result += " / ";
 		}
 		if(!isspace(resultList[i]))
 		{
+			if(counter > 0)
+			{
+				result += toString(counter);
+				counter = 0;
+			}
 			result += resultList[i];
 		}
 		else
-		{
 			counter++;
-			if(counter == 8)
-			{
-				result += '8';
-				counter = 0;
-			}
-		}
 
 	}
 	return result;
+}
+
+std::string Board::toString(int& i)
+{
+	std::stringstream ss;
+	ss << i;
+
+	return ss.str();
 }
 
 void Board::printBitboard()
@@ -184,3 +197,4 @@ void Board::printBitboard()
 	}
 	std::cout << "1|\n|  A  B  C  D  E  F  G  H  |\n";
 }
+

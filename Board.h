@@ -36,6 +36,7 @@ public:
 	piece getPieceAt(uint8_t index);
 	void setBoard(const char* fen);
 	std::string getFen();
+	std::string toString(int &i);
 
 private:
 
