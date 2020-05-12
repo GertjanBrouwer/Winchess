@@ -67,7 +67,8 @@ piece Board::getPieceAt(uint8_t index)
 	return {-1, -1};
 }
 
-void Board::clearBoard() {
+void Board::clearBoard()
+{
 	for(uint8_t color = 0; color < 2; color++)
 	{
 		for(uint8_t type = 0; type < 6; type++)
@@ -77,86 +78,128 @@ void Board::clearBoard() {
 	}
 }
 
-void Board::setBoard(const char* fen)
+void Board::setBoard(std::string fen)
 {
 	clearBoard();
 
-	std::map<char, uint8_t> types = {{'p', 0}, {'n', 1}, {'b', 2}, {'r', 3}, {'q', 4}, {'k',5}};
 	int currentPosition = -1;
+	int row, column, cPos;
+	std::string fenBoard = fen.substr(0, fen.find(' '));
+	fen = fen.erase(0, fenBoard.length() + 1);
 
-	for(uint8_t index = 0; index < strlen(fen); index++)
+	for(uint8_t index = 0; index < fenBoard.length(); index++)
 	{
-		char current = fen[index];
+		char currentPiece = fenBoard[index];
 
-		if(isdigit(current))
+		if(isdigit(currentPiece))
 		{
-			currentPosition += (int)current - 48;
+			//convert current int into the ascii table
+			currentPosition += (int)currentPiece - 48;
 		}
-		if(isalpha(current))
+		if(isalpha(currentPiece))
 		{
 			currentPosition += 1;
 			short type;
 
 			short color = 1;
 
-			if(isupper(current))
+			if(isupper(currentPiece))
 			{
 				color = 0;
-				current = tolower(current);
+				currentPiece = tolower(currentPiece);
 			}
 
-			type = types[current];
+			type = types.find(currentPiece)->second; 
 
-			pieces[color][type] |= (bitboard)1 << currentPosition;
+			row = currentPosition / 8;
+			column = currentPosition % 8;
+			cPos = (7 - row) * 8 + column;
+
+			//bitshift with OR opperator using a bitboard of only one piece
+			pieces[color][type] |= (bitboard)1 << cPos;
 		}
 	}
+
+	//check if next char w of b for turn
+	//concat 1char + space
+	activeColor = (fen.substr(0, fen.find(' ')) == "w") ? 'w' : 'b';
+	fen = fen.erase(0, 2);
+
+	//check if possible to castle
+	//concat length of string + space
+	std::string castlemove = fen.substr(0, fen.find(' '));
+	whiteCastle = (castlemove == "KQkq" || castlemove == "KQ") ? true : false;
+	blackCastle = (castlemove == "KQkq" || castlemove == "kq") ? true : false;
+	fen = fen.erase(0, castlemove.length() + 1);
+
+	//check if en passant is possible
+	//concat length of string + space
+	enPassant = fen.substr(0, fen.find(' '));
+	fen = fen.erase(0, enPassant.length() + 1);
+
+	//save number of halfmoves in attribute
+	//concat number + space
+	std::string hmc = fen.substr(0, fen.find(' '));
+	halfmoveClock = std::atoi(hmc.c_str());
+	fen = fen.erase(0, hmc.length() + 1);
+
+	//save number of fullmoves in attribute
+	//concat number
+	FullmoveNumber = std::atoi(fen.c_str());
 }
 
-std::string Board::getFen() 
+std::string Board::getFen()
 {
-	char resultList[64];
 	std::string result;
 	int counter = 0;
+	int index = 0;
 
-	for(uint8_t index = 0; index < 64; index++)
+	for(uint8_t row = 8; row > 0; row--)
 	{
-		piece piece = getPieceAt(index);
-		if(piece.color >= 0)
+		for(uint8_t col = 0; col < 8; col++)
 		{
-			resultList[index] = (piece.color == 0) ? toupper(kPieceChars[piece.type]) : kPieceChars[piece.type];
-			continue;
+			index = row * 8 + col - 8;
+			piece piece = getPieceAt(index);
+
+			if(!(piece.color == -1 || piece.type == -1))
+			{
+				if(counter > 0)
+				{
+					//add empty spaces to fen
+					result += intToString(counter);
+					counter = 0;
+				}
+				//add piece to fen
+				result += (piece.color == 0) ? toupper(kPieceChars[piece.type]) : kPieceChars[piece.type];
+			}
+			else
+				counter++;
 		}
-		resultList[index] = ' ';
+		if(counter > 0)
+		{
+			result += intToString(counter);
+			counter = 0;
+		}
+		if(row != 1)
+		{
+			result += "/";
+		}
 	}
 	
-	for(uint8_t i = 0; i < 64; i++)
-	{
-		if(i % 8 == 0 && i != 64 && i != 0)
-		{
-			if(counter > 0)
-			{
-				result += toString(counter);
-				counter = 0;
-			}
-			result += " / ";
-		}
-		if(!isspace(resultList[i]))
-		{
-			if(counter > 0)
-			{
-				result += toString(counter);
-				counter = 0;
-			}
-			result += resultList[i];
-		}
-		else
-			counter++;
+	result += " ";
+	result += activeColor;
+	std::string castle = (whiteCastle == true) ? "KQ" : "";
+	castle += (blackCastle == true) ? "kq" : "";
+	castle += (blackCastle == false && whiteCastle == false) ? "-" : "";
+	result += " " + castle;
+	result += " " + enPassant;
+	result += " " + intToString(halfmoveClock);
+	result += " " + intToString(FullmoveNumber);
 
-	}
 	return result;
 }
 
-std::string Board::toString(int& i)
+std::string Board::intToString(int& i)
 {
 	std::stringstream ss;
 	ss << i;
@@ -197,4 +240,3 @@ void Board::printBitboard()
 	}
 	std::cout << "1|\n|  A  B  C  D  E  F  G  H  |\n";
 }
-

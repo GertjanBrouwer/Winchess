@@ -12,10 +12,10 @@ public:
 	void Read();
 
 	void inputUCI();
-	void inputSetOptions(std::string inputstring);
+	void inputSetOptions();
 	void inputIsReady();
 	void inputUCINewGame();
-	void inputPosition(std::string inputString);
+	void inputPosition();
 	void inputGo();
 	void inputStop();
 	void inputPrint();
@@ -26,6 +26,4 @@ private:
 	std::string engineName;
 	Board* board;
 	char command[256];
-	std::string charToString();
-	std::string concatString(std::string input, int length);
 };

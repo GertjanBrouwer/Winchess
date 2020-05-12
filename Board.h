@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <map>
 
 typedef uint64_t bitboard;
 
@@ -18,6 +19,8 @@ const bitboard kPieceColor[] = {kStartAllWhite, kStartAllBlack};
 
 const char kPieceChars[] = {'p', 'n', 'b', 'r', 'q', 'k'};
 
+const std::map<char, uint8_t> types = {{'p', 0}, {'n', 1}, {'b', 2}, {'r', 3}, {'q', 4}, {'k', 5}};
+
 struct piece
 {
 	short color;
@@ -34,11 +37,18 @@ public:
 	void move(const char* move);
 	uint8_t positionToIndex(const char* position);
 	piece getPieceAt(uint8_t index);
-	void setBoard(const char* fen);
+	void setBoard(std::string fen);
 	std::string getFen();
-	std::string toString(int &i);
+	std::string intToString(int &i);
 
 private:
 
 	void clearBoard();
+
+	char activeColor;
+	bool whiteCastle;
+	bool blackCastle;
+	std::string enPassant;
+	int halfmoveClock;
+	int FullmoveNumber;
 };

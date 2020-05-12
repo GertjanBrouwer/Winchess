@@ -21,13 +21,13 @@ void UCI::Read()
 		std::cout << "-----------------" << std::endl;
 
 		if(strstr(command, "setoption"))
-			inputSetOptions(charToString());
+			inputSetOptions();
 		else if(strstr(command, "isready"))
 			inputIsReady();
 		else if(strstr(command, "ucinewgame"))
 			inputUCINewGame();
 		else if(strstr(command, "position"))
-			inputPosition(charToString());
+			inputPosition();
 		else if(strstr(command, "go"))
 			inputGo();
 		else if(strstr(command, "stop"))
@@ -54,7 +54,7 @@ void UCI::inputUCI()
 	std::cout << "uciok" << std::endl;
 };
 
-void UCI::inputSetOptions(std::string inputString)
+void UCI::inputSetOptions()
 {
 	std::cout << "NOT IMPLEMENTED YET" << std::endl;
 };
@@ -67,48 +67,48 @@ void UCI::inputIsReady()
 void UCI::inputUCINewGame()
 {
 	std::cout << "starting new game..." << std::endl;
-	//const char* fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-	const char* fen = "R7/1pb3k1/7p/3p4/8/1qp1r2p/2rP3P/N2n1K2";
+	std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 	board->setBoard(fen);
 };
 
-void UCI::inputPosition(std::string inputString)
+//Used to set the board to a specific fen and set moves within that board state
+void UCI::inputPosition()
 {
-
+	std::string cmd = command;
 	//remove posistion_ from input
-	inputString = concatString(inputString, 9);
+	cmd = cmd.erase(0, 9);
 
-	if(inputString.find("startpos") != std::string::npos)
+	if(cmd.find("startpos") != std::string::npos)
 	{
 		//remove startpos_ from input
-		inputString = concatString(inputString, 9);
+		cmd = cmd.erase(0, 9);
 
 		std::cout << "found startpos" << std::endl;
 
 		//set bitboard to startpos
+		board->setBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
 	}
-	else if(inputString.find("fen") != std::string::npos)
+	else
 	{
-		//remove fen_ from input
-		inputString = concatString(inputString, 4);
-
 		std::cout << "found fen" << std::endl;
 
 		//set bitboard to fen
+		board->setBoard(cmd.substr(0, cmd.find(" moves")));
+		cmd = cmd.erase(0, cmd.substr(0, cmd.find(" moves")).length());
 	}
-	if(inputString.find("moves") != std::string::npos)
+	if(cmd.find("moves") != std::string::npos)
 	{
 		//remove moves_ from input
-		inputString = concatString(inputString, inputString.find("moves") + 6);
+		cmd = cmd.erase(0, cmd.find("moves") + 6);
 
-		while(inputString.length() > 0)
+		while(cmd.length() > 0)
 		{
-			std::cout << inputString.substr(0, 4) << std::endl;
+			std::cout << cmd.substr(0, 4) << std::endl;
 
-			board->move(inputString.substr(0, 4).c_str());
+			board->move(cmd.substr(0, 4).c_str());
 
 			//remove the first move in the list
-			inputString = concatString(inputString, 5);
+			cmd = cmd.erase(0, 5);
 		}
 	}
 };
@@ -127,6 +127,7 @@ void UCI::inputStop()
 
 void UCI::inputQuit() 
 {
+	exit(0);
 	std::cout << "NOT IMPLEMENTED YET" << std::endl;
 }
 
@@ -138,14 +139,4 @@ void UCI::getFen()
 void UCI::inputPrint()
 {
 	board->printBitboard();
-};
-
-std::string UCI::charToString()
-{
-	return std::string(command);
-};
-
-std::string UCI::concatString(std::string input, int length)
-{
-	return input.erase(0, length);
 };
