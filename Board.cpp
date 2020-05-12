@@ -37,8 +37,7 @@ void Board::move(const char* move)
 	piece movePiece = getPieceAt(startPosition);
 	if(movePiece.color < 0)
 		return;
-	pieces[movePiece.color][movePiece.type] =
-		(pieces[movePiece.color][movePiece.type] - ((bitboard)1 << startPosition)) + ((bitboard)1 << targetPosition);
+	pieces[movePiece.color][movePiece.type] = (pieces[movePiece.color][movePiece.type] - ((bitboard)1 << startPosition)) + ((bitboard)1 << targetPosition);
 }
 
 uint8_t Board::positionToIndex(const char* position)

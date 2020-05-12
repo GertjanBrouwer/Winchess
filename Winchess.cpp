@@ -1,7 +1,7 @@
-﻿#include <iostream>
+﻿#include <bitset>
+#include <iostream>
 #include "UCI.h"
 #include "Board.h"
-#include <bitset>
 
 int main()
 {
