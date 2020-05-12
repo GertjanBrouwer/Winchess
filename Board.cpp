@@ -128,8 +128,10 @@ void Board::setBoard(std::string fen)
 	//check if possible to castle
 	//concat length of string + space
 	std::string castlemove = fen.substr(0, fen.find(' '));
-	whiteCastle = (castlemove == "KQkq" || castlemove == "KQ") ? true : false;
-	blackCastle = (castlemove == "KQkq" || castlemove == "kq") ? true : false;
+	whiteKingCastle = (castlemove.find('K') != std::string::npos) ? true : false;
+	whiteQueenCastle = (castlemove.find('Q') != std::string::npos) ? true : false;
+	blackKingCastle = (castlemove.find('k') != std::string::npos) ? true : false;
+	blackQueenCastle = (castlemove.find('q') != std::string::npos) ? true : false;
 	fen = fen.erase(0, castlemove.length() + 1);
 
 	//check if en passant is possible

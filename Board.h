@@ -46,8 +46,10 @@ private:
 	void clearBoard();
 
 	char activeColor;
-	bool whiteCastle;
-	bool blackCastle;
+	bool whiteQueenCastle;
+	bool whiteKingCastle;
+	bool blackQueenCastle;
+	bool blackKingCastle;
 	std::string enPassant;
 	int halfmoveClock;
 	int FullmoveNumber;
