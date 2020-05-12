@@ -8,7 +8,7 @@ inline int8_t absDiff(int a, int b)
 
 inline int getBitIndex(bitboard board)
 {
-	for (uint8_t pos = 0; pos < 64; pos++)
+	for (uint8_t pos = 0; pos < 64; ++pos)
 	{
 		if (board & (bitboard)1 << pos)
 		{
