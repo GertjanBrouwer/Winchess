@@ -69,7 +69,7 @@ piece Board::getPieceAt(uint8_t index)
 
 void Board::clearBoard()
 {
-	for(uint8_t color = 0; color < 2; color++)
+	for(uint8_t color = 0; color < 2; ++color)
 	{
 		for(uint8_t type = 0; type < 6; type++)
 		{
