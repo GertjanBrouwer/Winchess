@@ -190,10 +190,13 @@ std::string Board::getFen()
 	
 	result += " ";
 	result += activeColor;
-	std::string castle = (whiteCastle == true) ? "KQ" : "";
-	castle += (blackCastle == true) ? "kq" : "";
-	castle += (blackCastle == false && whiteCastle == false) ? "-" : "";
-	result += " " + castle;
+
+	std::string castle = (whiteKingCastle == true) ? "K" : "";
+	castle += (whiteQueenCastle == true) ? "Q" : "";
+	castle += (blackKingCastle == true) ? "k" : "";
+	castle += (blackQueenCastle == true) ? "q" : "";
+	result += " "+castle;
+
 	result += " " + enPassant;
 	result += " " + intToString(halfmoveClock);
 	result += " " + intToString(FullmoveNumber);
