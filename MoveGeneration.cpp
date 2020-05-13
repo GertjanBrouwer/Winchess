@@ -28,7 +28,7 @@ std::vector<Move> MoveGeneration::getAllMoves()
 {
 	std::vector<Move> legalMoves;
 	// Loop though all squares on the board
-	for (uint8_t squareIndex = 0; squareIndex < 64; squareIndex++)
+	for (uint8_t squareIndex = 0; squareIndex < 64; ++squareIndex)
 	{
 		Piece piece = board->getPieceAt(squareIndex);
 		if (piece.color != board->turn)
@@ -50,7 +50,7 @@ std::vector<Move> MoveGeneration::getAllMoves()
 			continue;
 
 		// Loop though all squares on the board to find indexes of moves
-		for (uint8_t destination = 0; destination < 64; destination++)
+		for (uint8_t destination = 0; destination < 64; ++destination)
 		{
 			// Check if move result is not colliding with your own pieces
 			if (moves & (bitboard)1 << destination & ~board->getOccupied(board->turn))
@@ -99,7 +99,7 @@ bitboard MoveGeneration::getPawnMoves(uint8_t position)
 	// Captures move
 	if (board->turn == White)
 	{
-		foundMoves |= piecePosition << 7 & enemyOccupied & kNotHFile;;
+		foundMoves |= piecePosition << 7 & enemyOccupied & kNotHFile;
 		foundMoves |= piecePosition << 9 & enemyOccupied & kNotAFile;
 	}
 	else

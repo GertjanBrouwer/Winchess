@@ -74,7 +74,7 @@ void Board::updateCombinedBitboard()
 bitboard Board::getOccupied(uint8_t color)
 {
 	bitboard result = 0;
-	for (size_t index = 0; index < 6; index++)
+	for (size_t index = 0; index < 6; ++index)
 	{
 		result |= pieces[color][index];
 	}
@@ -86,7 +86,7 @@ bitboard Board::getOccupied(uint8_t color)
 bitboard Board::getAllPieces()
 {
 	bitboard result = 0;
-	for (size_t index = 0; index < 6; index++)
+	for (size_t index = 0; index < 6; ++index)
 	{
 		result |= pieces[0][index];
 		result |= pieces[1][index];
@@ -106,9 +106,9 @@ uint8_t Board::positionToIndex(const char* position)
 
 Piece Board::getPieceAt(uint8_t index)
 {
-	for (uint8_t color = 0; color < 2; color++)
+	for (uint8_t color = 0; color < 2; ++color)
 	{
-		for (uint8_t type = 0; type < 6; type++)
+		for (uint8_t type = 0; type < 6; ++type)
 		{
 			// Move bit at index position to front and check if piece is present (bit and-operation)
 			if ((pieces[color][type] >> index) & 0b1)
@@ -125,7 +125,7 @@ void Board::printBitboard()
 {
 	char result[64];
 
-	for (uint8_t index = 0; index < 64; index++)
+	for (uint8_t index = 0; index < 64; ++index)
 	{
 		Piece piece = getPieceAt(index);
 		if (piece.color >= 0)
@@ -137,9 +137,9 @@ void Board::printBitboard()
 	}
 
 	std::cout << "\n|  A  B  C  D  E  F  G  H  |\n|8";
-	for (short row = 7; row >= 0; row--)
+	for (short row = 7; row >= 0; --row)
 	{
-		for (short col = 0; col < 8; col++)
+		for (short col = 0; col < 8; ++col)
 		{
 			uint8_t index = row * 8 + col;
 			std::cout << ' ' << result[index] << ' ';
