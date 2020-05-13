@@ -1,13 +1,12 @@
 #pragma once
-#include <iostream>
 #include <map>
-#include <stack>
 #include <vector>
 
 struct Move
 {
 	unsigned int startPosition;
 	unsigned int targetPosition;
+	short promotionPieceType = 0;
 };
 
 typedef uint64_t bitboard;
@@ -55,6 +54,12 @@ struct Piece
 	int type;
 };
 
+struct BoardBitboards
+{
+	bitboard occupied;
+	bitboard occupiedByColor[2];
+};
+
 class Board
 {
 public:
@@ -64,19 +69,22 @@ public:
 	bool castleWKingSide = true;
 	bool castleBQueenSide = true;
 	bool castleBKingSide = true;
-	bitboard enPassant = 0;
+	Move lastMove;
+	Board* origin = nullptr;
+	BoardBitboards bitboardCache;
 	Board();
+	Board(Board* board);
 	void printBitboard();
 	void moveByChar(const char* move);
 	void doMove(Move move);
-	void undoMove(Move move);
+	Board* getBoardWithMove(Move move);
 	bitboard getOccupied(int color);
 	unsigned int positionToIndex(const char* position);
 	Piece getPieceAt(int index);
 	void setBoard(std::string fen);
 	std::string getFen();
 	bitboard getAllPieces();
-	void updateCombinedBitboard();
+	void updateBitboardCache();
 	bitboard getOccupied(uint8_t color);
 	std::string intToString(int& i);
 
@@ -85,3 +93,4 @@ private:
 	int halfmoveClock;
 	int FullmoveNumber;
 };
+

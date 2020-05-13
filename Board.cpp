@@ -1,6 +1,7 @@
 #include "Board.h"
 #include <map>
 #include <sstream>
+#include <iostream>
 
 Board::Board()
 {
@@ -15,6 +16,20 @@ Board::Board()
 			pieces[color][type] = kStartPiecePositions[type] & kPieceColor[color];
 		}
 	}
+	this->updateBitboardCache();
+}
+
+Board::Board(Board* board)
+{
+	this->origin = board;
+	std::copy(&board->pieces[0][0], &board->pieces[0][0] + 2 * 6, &this->pieces[0][0]);
+	this->turn = board->turn;
+	this->castleWQueenSide = board->castleWQueenSide;
+	this->castleWKingSide = board->castleWKingSide;
+	this->castleBQueenSide = board->castleBQueenSide;
+	this->castleBKingSide = board->castleBKingSide;
+	this->lastMove = board->lastMove;
+	this->bitboardCache = board->bitboardCache;
 }
 
 // Moving the pawn e2->e4 from the initial chess position :
@@ -47,53 +62,107 @@ void Board::doMove(Move move)
 	if(piece.color < 0)
 		return;
 
-	//@TODO handle captures
-	//@TODO handle castling
-	//@TODO handle en passant
 	//@TODO handle promotions
 
-	pieces[piece.color][piece.type] = (pieces[piece.color][piece.type] - ((bitboard)1 << from)) + ((bitboard)1 << to);
+	bitboard fromMask = (bitboard)1 << from;
+	bitboard toMask = (bitboard)1 << to;
 
-	turn = (PieceColor)(1 - turn);
+	// Captures
+	pieces[White][Pawn] &= ~toMask;
+	pieces[White][Knight] &= ~toMask;
+	pieces[White][Bishop] &= ~toMask;
+	pieces[White][Rook] &= ~toMask;
+	pieces[White][Queen] &= ~toMask;
+	pieces[White][King] &= ~toMask;
+
+	pieces[Black][Pawn] &= ~toMask;
+	pieces[Black][Knight] &= ~toMask;
+	pieces[Black][Bishop] &= ~toMask;
+	pieces[Black][Rook] &= ~toMask;
+	pieces[Black][Queen] &= ~toMask;
+	pieces[Black][King] &= ~toMask;
+
+	// Castling
+	if(piece.type == King && abs(from - to) == 2)
+	{
+		bitboard colorBitboard = piece.color == White ? kStartAllWhite : kStartAllBlack;
+
+		if(from - to < 0)
+		{
+			//King side
+			bitboard kingSideBitboard = 0b1000000000000000000000000000000000000000000000000000000010000000;
+			bitboard movingRookBitboard = kingSideBitboard & colorBitboard;
+
+			// Move rook and add then add the rooks that weren't on the start position
+			pieces[piece.color][Rook] = movingRookBitboard >> 2 | (pieces[piece.color][Rook] & ~movingRookBitboard);
+		}
+		else
+		{
+			//Queen side
+			bitboard queenSideBitboard = 0b0000000100000000000000000000000000000000000000000000000000000001;
+			bitboard movingRookBitboard = queenSideBitboard & colorBitboard;
+
+			// Move rook and add then add the rooks that weren't on the start position
+			pieces[piece.color][Rook] = movingRookBitboard << 3 | (pieces[piece.color][Rook] & ~movingRookBitboard);
+		}
+	}
+
+	// En passant
+	if(piece.type == Pawn && to - from % 2 == 1 && (getOccupied(1 - piece.color) & toMask) == 0)
+	{
+		if(piece.color == White)
+		{
+			pieces[Black][Pawn] -= toMask >> 8;
+		}
+		else
+		{
+			pieces[White][Pawn] -= toMask << 8;
+		}
+	}
+
+	// Promotions
+	if(move.promotionPieceType != 0)
+	{
+		pieces[piece.color][move.promotionPieceType] |= fromMask;
+	}
+
+	pieces[piece.color][piece.type] = pieces[piece.color][piece.type] - fromMask + toMask;
+	turn = static_cast<PieceColor>(1 - turn);
+
+	this->updateBitboardCache();
 }
 
-void Board::undoMove(Move move)
+Board* Board::getBoardWithMove(Move move)
 {
-	doMove({move.targetPosition, move.startPosition});
-	//@TODO handle undo move
-	//@TODO handle captures
-	//@TODO handle castling
-	//@TODO handle en passant
-	//@TODO handle promotions
+	Board* newState = new Board(this);
+	newState->lastMove = move;
+	newState->doMove(move);
+	return newState;
 }
 
-void Board::updateCombinedBitboard()
+void Board::updateBitboardCache()
 {
-	// @TODO Cache and update combined bit boards here (Occupied (by color), AllPieces, Empty?, etc..)
+	bitboardCache.occupiedByColor[White] = 0;
+	bitboardCache.occupiedByColor[Black] = 0;
+	for(size_t index = 0; index < 6; index++)
+	{
+		bitboardCache.occupiedByColor[White] |= pieces[White][index];
+		bitboardCache.occupiedByColor[Black] |= pieces[Black][index];
+	}
+
+	bitboardCache.occupied = bitboardCache.occupiedByColor[White] | bitboardCache.occupiedByColor[Black];
 }
 
 bitboard Board::getOccupied(uint8_t color)
-{
-	bitboard result = 0;
 	for(size_t index = 0; index < 6; ++index)
-	{
-		result |= pieces[color][index];
-	}
-
-	return result;
+{
+	return bitboardCache.occupiedByColor[color];
 }
 
 // Returns a bitboard containing all the pieces on the board
 bitboard Board::getAllPieces()
 {
-	bitboard result = 0;
-	for(size_t index = 0; index < 6; ++index)
-	{
-		result |= pieces[0][index];
-		result |= pieces[1][index];
-	}
-
-	return result;
+	return bitboardCache.occupied;
 }
 
 bitboard Board::getOccupied(int color)

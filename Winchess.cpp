@@ -62,9 +62,11 @@ int main()
 	board->setBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
 	board->printBitboard();
-	auto moves = generation->getAllMoves();
+	Board* board2 = new Board(board);
+	board2->printBitboard();
 
-	std::cout << "Amount of found moves: " << moves.size() << std::endl;
+	Board* board3 = board->getBoardWithMove(Move{12, 20});
+	board->printBitboard();
 
 	//TestDepth1(board, generation);
 
@@ -73,4 +75,34 @@ int main()
 	std::cout << eval->getBoardValue() << std::endl;
 
 	uci->Read();
+	double duration;
+	start = std::clock();
+
+	int moves = generation->perft(1);
+	std::cout << "Amount of found moves: " << moves << std::endl;
+
+	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
+
+	std::cout << "Duration: " << duration << '\n';
+
+	start = std::clock();
+	for(auto i = 0; i < 19900000; i++)
+	{
+		board2 = new Board(board);
+		delete board2;
+	}
+	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
+	std::cout << "Duration loop: " << duration << '\n';
+
+	do
+	{
+		std::cout << '\n' << "Press a key to continue...";
+	} while(std::cin.get() != '\n');
+}
+
+int test(int depth)
+{
+	if(depth <= 0)
+		return 1;
+	return test(depth - 1);
 }
