@@ -33,6 +33,20 @@ const char kPieceChars[] = {'p', 'n', 'b', 'r', 'q', 'k'};
 const std::map<char, uint8_t> types = {{'p', 0}, {'n', 1}, {'b', 2}, {'r', 3}, {'q', 4}, {'k', 5}};
 
 enum PieceType
+	Knight,
+	Bishop,
+	Rook,
+	Queen,
+	King
+};
+
+enum PieceColor
+{
+	White,
+	Black
+};
+
+struct Piece
 {
 	Pawn,
 	Knight,

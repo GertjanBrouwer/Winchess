@@ -149,7 +149,6 @@
   <ItemGroup>
     <ClCompile Include="Board.cpp" />
     <ClCompile Include="UCI.cpp" />
-   
     <ClCompile Include="MoveGeneration.cpp" />
     <ClCompile Include="Winchess.cpp" />
   </ItemGroup>

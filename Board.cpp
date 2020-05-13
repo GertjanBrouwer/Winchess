@@ -56,8 +56,45 @@ void Board::doMove(Move move)
 	pieces[piece.color][piece.type] = (pieces[piece.color][piece.type] - ((bitboard)1 << from)) + ((bitboard)1 << to);
 
 	turn = (PieceColor)(1 - turn);
+}
 
+void Board::undoMove(Move move)
+{
+	doMove({move.targetPosition, move.startPosition});
+	//@TODO handle undo move
 	//@TODO handle captures
+	//@TODO handle castling
+	//@TODO handle en passant
+	//@TODO handle promotions	
+}
+
+void Board::updateCombinedBitboard()
+{
+	// @TODO Cache and update combined bit boards here (Occupied (by color), AllPieces, Empty?, etc..)
+}
+
+bitboard Board::getOccupied(uint8_t color)
+{
+	bitboard result = 0;
+	for (size_t index = 0; index < 6; ++index)
+	{
+		result |= pieces[color][index];
+	}
+
+	return result;
+}
+
+// Returns a bitboard containing all the pieces on the board
+bitboard Board::getAllPieces()
+{
+	bitboard result = 0;
+	for (size_t index = 0; index < 6; ++index)
+	{
+		result |= pieces[0][index];
+		result |= pieces[1][index];
+	}
+
+	return result;
 }
 
 void Board::undoMove(Move move)
@@ -288,9 +325,9 @@ void Board::printBitboard()
 	}
 
 	std::cout << "\n|  A  B  C  D  E  F  G  H  |\n|8";
-	for (short row = 7; row >= 0; row--)
+	for (short row = 7; row >= 0; --row)
 	{
-		for (short col = 0; col < 8; col++)
+		for (short col = 0; col < 8; ++col)
 		{
 			int index = row * 8 + col;
 			std::cout << ' ' << result[index] << ' ';

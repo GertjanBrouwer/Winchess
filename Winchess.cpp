@@ -8,8 +8,8 @@
 int main()
 {
 	Board* board = new Board();
-	
-	UCI* uci = new UCI(board);
+
+	MoveGeneration* generation = new MoveGeneration(board);
 
 	MoveGeneration* generation = new MoveGeneration(board);
 
