@@ -4,13 +4,10 @@
 class UCI
 {
 public:
-
 	UCI(Board* bitboard);
 	~UCI();
 
-
 	void Read();
-
 	void inputUCI();
 	void inputSetOptions();
 	void inputIsReady();

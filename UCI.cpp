@@ -17,7 +17,7 @@ void UCI::Read()
 	while(true)
 	{
 		//read incomming line and save in char array command
-		std::cin.getline(command, 256);
+		std::cin.getline(command, 255);
 		std::cout << "-----------------" << std::endl;
 
 		if(strstr(command, "setoption"))
@@ -86,7 +86,7 @@ void UCI::inputPosition()
 		std::cout << "found startpos" << std::endl;
 
 		//set bitboard to startpos
-		board->setBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+		board->setBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 	}
 	else
 	{

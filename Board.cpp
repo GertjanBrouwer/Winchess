@@ -68,9 +68,9 @@ piece Board::getPieceAt(uint8_t index)
 
 void Board::clearBoard()
 {
-	for(uint8_t color = 0; color < 2; color++)
+	for(uint8_t color = 0; color < 2; ++color)
 	{
-		for(uint8_t type = 0; type < 6; type++)
+		for(uint8_t type = 0; type < 6; ++type)
 		{
 			pieces[color][type] = 0;
 		}
@@ -82,11 +82,11 @@ void Board::setBoard(std::string fen)
 	clearBoard();
 
 	int currentPosition = -1;
-	int row, column, cPos;
+	int row, column, actualPosition;
 	std::string fenBoard = fen.substr(0, fen.find(' '));
 	fen = fen.erase(0, fenBoard.length() + 1);
 
-	for(uint8_t index = 0; index < fenBoard.length(); index++)
+	for(uint8_t index = 0; index < fenBoard.length(); ++index)
 	{
 		char currentPiece = fenBoard[index];
 
@@ -112,14 +112,14 @@ void Board::setBoard(std::string fen)
 
 			row = currentPosition / 8;
 			column = currentPosition % 8;
-			cPos = (7 - row) * 8 + column;
+			actualPosition = (7 - row) * 8 + column;
 
 			//bitshift with OR opperator using a bitboard of only one piece
-			pieces[color][type] |= (bitboard)1 << cPos;
+			pieces[color][type] |= (bitboard)1 << actualPosition;
 		}
 	}
 
-	//check if next char w of b for turn
+	//check if next char w or b for turn
 	//concat 1char + space
 	activeColor = (fen.substr(0, fen.find(' ')) == "w") ? 'w' : 'b';
 	fen = fen.erase(0, 2);
