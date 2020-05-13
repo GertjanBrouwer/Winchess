@@ -72,7 +72,10 @@ std::vector<Move> MoveGeneration::getAllMoves()
 			{
 				// Do move
 				board->pieces[board->turn][piece.type] &= ~((bitboard)1 << pieceIndex);
-				board->pieces[board->turn][piece.type] |= (bitboard)1 << destination;
+				bitboard destinationMask = (bitboard)1 << destination;
+
+				board->pieces[board->turn][piece.type] &= ~fromMask;
+				board->pieces[board->turn][piece.type] |= destinationMask;
 
 				bitboard destinationMask = (bitboard)1 << destination;
 				
@@ -96,9 +99,22 @@ std::vector<Move> MoveGeneration::getAllMoves()
 				int kingPosition = getBitIndex(b);
 				if (!isInCheck(kingPosition))
 					legalMoves.push_back({pieceIndex, destination});
+					// Promotions
+					if (kOuterRank & destinationMask)
+					{
+						legalMoves.push_back({squareIndex, destination, Queen});
+						legalMoves.push_back({squareIndex, destination, Rook});
+						legalMoves.push_back({squareIndex, destination, Bishop});
+						legalMoves.push_back({squareIndex, destination, Knight});
+					}
+					else
+					{
+						legalMoves.push_back({squareIndex, destination});
+					}
+				}
 
 				//Undo move
-				board->pieces[board->turn][piece.type] &= ~((bitboard)1 << destination);
+				board->pieces[board->turn][piece.type] &= ~destinationMask;
 				board->pieces[board->turn][piece.type] |= (bitboard)1 << pieceIndex;
 				
 				board->pieces[!board->turn][Pawn] |= pawnPieceRemoved;
@@ -440,26 +456,33 @@ bitboard MoveGeneration::getCastlingMoves(int position)
 				moves |= 4611686018427387904; // 0100 0000
 		}
 	}
-
+	board->updateBitboardCache();
 	return moves;
 }
 
 int MoveGeneration::perft(int depth)
 {
-	//@TODO FINISH
-	bitboard nodes = 0;
+	int nodes = 0;
 
 	if (depth == 0)
 		return 1;
 
-	auto move_list = getAllMoves();
+	std::vector<Move> move_list = getAllMoves();
 	for (int i = 0; i < move_list.size(); i++)
 	{
-		board->doMove(move_list[i]);
-		int n = board->pieces[board->turn][King];
-		if (!isInCheck(log2(n & -n) + 1))
+		board = board->getBoardWithMove(move_list[i]);
+		int kingBitboard = board->pieces[board->turn][King];
+		if (kingBitboard == 0 || !isInCheck(getBitIndex(kingBitboard)))
+		{
 			nodes += perft(depth - 1);
-		board->undoMove(move_list[i]);
+		}
+
+		Board* original = board->origin;
+
+		delete board;
+
+		board = original;
 	}
+
 	return nodes;
 }
