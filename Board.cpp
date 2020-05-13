@@ -1,4 +1,6 @@
 #include "Board.h"
+#include <map>
+#include <sstream>
 
 Board::Board()
 {
@@ -64,6 +66,151 @@ piece Board::getPieceAt(uint8_t index)
 	return {-1, -1};
 }
 
+void Board::clearBoard()
+{
+	for(uint8_t color = 0; color < 2; ++color)
+	{
+		for(uint8_t type = 0; type < 6; ++type)
+		{
+			pieces[color][type] = 0;
+		}
+	}
+}
+
+void Board::setBoard(std::string fen)
+{
+	clearBoard();
+
+	int currentPosition = -1;
+	int row, column, actualPosition;
+	std::string fenBoard = fen.substr(0, fen.find(' '));
+	fen = fen.erase(0, fenBoard.length() + 1);
+
+	for(uint8_t index = 0; index < fenBoard.length(); ++index)
+	{
+		char currentPiece = fenBoard[index];
+
+		if(isdigit(currentPiece))
+		{
+			//convert current int into the ascii table
+			currentPosition += (int)currentPiece - 48;
+		}
+		if(isalpha(currentPiece))
+		{
+			currentPosition += 1;
+			short type;
+
+			short color = 1;
+
+			if(isupper(currentPiece))
+			{
+				color = 0;
+				currentPiece = tolower(currentPiece);
+			}
+
+			type = types.find(currentPiece)->second; 
+
+			row = currentPosition / 8;
+			column = currentPosition % 8;
+			actualPosition = (7 - row) * 8 + column;
+
+			//bitshift with OR opperator using a bitboard of only one piece
+			pieces[color][type] |= (bitboard)1 << actualPosition;
+		}
+	}
+
+	//check if next char w or b for turn
+	//concat 1char + space
+	activeColor = (fen.substr(0, fen.find(' ')) == "w") ? 'w' : 'b';
+	fen = fen.erase(0, 2);
+
+	//check if possible to castle
+	//concat length of string + space
+	std::string castlemove = fen.substr(0, fen.find(' '));
+	whiteKingCastle = (castlemove.find('K') != std::string::npos) ? true : false;
+	whiteQueenCastle = (castlemove.find('Q') != std::string::npos) ? true : false;
+	blackKingCastle = (castlemove.find('k') != std::string::npos) ? true : false;
+	blackQueenCastle = (castlemove.find('q') != std::string::npos) ? true : false;
+	fen = fen.erase(0, castlemove.length() + 1);
+
+	//check if en passant is possible
+	//concat length of string + space
+	enPassant = fen.substr(0, fen.find(' '));
+	fen = fen.erase(0, enPassant.length() + 1);
+
+	//save number of halfmoves in attribute
+	//concat number + space
+	std::string hmc = fen.substr(0, fen.find(' '));
+	halfmoveClock = std::atoi(hmc.c_str());
+	fen = fen.erase(0, hmc.length() + 1);
+
+	//save number of fullmoves in attribute
+	//concat number
+	FullmoveNumber = std::atoi(fen.c_str());
+}
+
+std::string Board::getFen()
+{
+	std::string result;
+	int counter = 0;
+	int index = 0;
+
+	for(uint8_t row = 8; row > 0; row--)
+	{
+		for(uint8_t col = 0; col < 8; col++)
+		{
+			index = row * 8 + col - 8;
+			piece piece = getPieceAt(index);
+
+			if(!(piece.color == -1 || piece.type == -1))
+			{
+				if(counter > 0)
+				{
+					//add empty spaces to fen
+					result += intToString(counter);
+					counter = 0;
+				}
+				//add piece to fen
+				result += (piece.color == 0) ? toupper(kPieceChars[piece.type]) : kPieceChars[piece.type];
+			}
+			else
+				counter++;
+		}
+		if(counter > 0)
+		{
+			result += intToString(counter);
+			counter = 0;
+		}
+		if(row != 1)
+		{
+			result += "/";
+		}
+	}
+	
+	result += " ";
+	result += activeColor;
+
+	std::string castle = (whiteKingCastle == true) ? "K" : "";
+	castle += (whiteQueenCastle == true) ? "Q" : "";
+	castle += (blackKingCastle == true) ? "k" : "";
+	castle += (blackQueenCastle == true) ? "q" : "";
+	result += " "+castle;
+
+	result += " " + enPassant;
+	result += " " + intToString(halfmoveClock);
+	result += " " + intToString(FullmoveNumber);
+
+	return result;
+}
+
+std::string Board::intToString(int& i)
+{
+	std::stringstream ss;
+	ss << i;
+
+	return ss.str();
+}
+
 void Board::printBitboard()
 {
 	char result[64];
@@ -88,9 +235,11 @@ void Board::printBitboard()
 			std::cout << ' ' << result[index] << ' ';
 			if((index + 1) % 8 == 0 && index + 1 != 8)
 			{
-				std::cout << row + 1 << "|\n" << "|" << row;
+				std::cout << row + 1 << "|\n"
+						  << "|" << row;
 			}
-			else if(index + 1 != 8) std::cout << "";
+			else if(index + 1 != 8)
+				std::cout << "";
 		}
 	}
 	std::cout << "1|\n|  A  B  C  D  E  F  G  H  |\n";
