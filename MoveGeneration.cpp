@@ -65,12 +65,32 @@ std::vector<Move> MoveGeneration::getAllMoves()
 			// Remove piece from allPieces
 			moves &= ~((bitboard)1 << destination);
 
+
+			
 			// Check if move result is not colliding with your own pieces
 			if ((bitboard)1 << destination & ~board->getOccupied(board->turn))
 			{
 				// Do move
 				board->pieces[board->turn][piece.type] &= ~((bitboard)1 << pieceIndex);
 				board->pieces[board->turn][piece.type] |= (bitboard)1 << destination;
+
+				bitboard destinationMask = (bitboard)1 << destination;
+				
+				bitboard pawnPieceRemoved = board->pieces[!board->turn][Pawn] & destinationMask;
+				board->pieces[!board->turn][Pawn] &= ~pawnPieceRemoved;
+				
+				bitboard knighPieceRemoved = board->pieces[!board->turn][Knight] & destinationMask;
+				board->pieces[!board->turn][Knight] &= ~knighPieceRemoved;
+
+				bitboard bishopPieceRemoved = board->pieces[!board->turn][Bishop] & destinationMask;
+				board->pieces[!board->turn][Bishop] &= ~bishopPieceRemoved;
+
+				bitboard rookPieceRemoved = board->pieces[!board->turn][Rook] & destinationMask;
+				board->pieces[!board->turn][Rook] &= ~rookPieceRemoved;
+				
+				bitboard queenPieceRemoved = board->pieces[!board->turn][Queen] & destinationMask;
+				board->pieces[!board->turn][Queen] &= ~queenPieceRemoved;
+				
 
 				bitboard b = board->pieces[board->turn][King];
 				int kingPosition = getBitIndex(b);
@@ -80,6 +100,12 @@ std::vector<Move> MoveGeneration::getAllMoves()
 				//Undo move
 				board->pieces[board->turn][piece.type] &= ~((bitboard)1 << destination);
 				board->pieces[board->turn][piece.type] |= (bitboard)1 << pieceIndex;
+				
+				board->pieces[!board->turn][Pawn] |= pawnPieceRemoved;
+				board->pieces[!board->turn][Knight] |= knighPieceRemoved;
+				board->pieces[!board->turn][Bishop] |= bishopPieceRemoved;
+				board->pieces[!board->turn][Rook] |= rookPieceRemoved;
+				board->pieces[!board->turn][Queen] |= queenPieceRemoved;
 			}
 		}
 	}

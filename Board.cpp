@@ -4,9 +4,9 @@
 
 Board::Board()
 {
-	for (int color = 0; color < 2; color++)
+	for(int color = 0; color < 2; color++)
 	{
-		for (int type = 0; type < 6; type++)
+		for(int type = 0; type < 6; type++)
 		{
 			// kStartPiecePositions = bitboards of start position of all the pieces
 			// kPieceColor = bitboards of the chess piece colors
@@ -43,15 +43,14 @@ void Board::doMove(Move move)
 	int to = move.targetPosition;
 	Piece piece = getPieceAt(from);
 
-
 	// Check if piece exists on location
-	if (piece.color < 0)
+	if(piece.color < 0)
 		return;
 
 	//@TODO handle captures
-	//@TODO handle castling 
+	//@TODO handle castling
 	//@TODO handle en passant
-	//@TODO handle promotions	
+	//@TODO handle promotions
 
 	pieces[piece.color][piece.type] = (pieces[piece.color][piece.type] - ((bitboard)1 << from)) + ((bitboard)1 << to);
 
@@ -65,7 +64,7 @@ void Board::undoMove(Move move)
 	//@TODO handle captures
 	//@TODO handle castling
 	//@TODO handle en passant
-	//@TODO handle promotions	
+	//@TODO handle promotions
 }
 
 void Board::updateCombinedBitboard()
@@ -76,7 +75,7 @@ void Board::updateCombinedBitboard()
 bitboard Board::getOccupied(uint8_t color)
 {
 	bitboard result = 0;
-	for (size_t index = 0; index < 6; ++index)
+	for(size_t index = 0; index < 6; ++index)
 	{
 		result |= pieces[color][index];
 	}
@@ -88,7 +87,7 @@ bitboard Board::getOccupied(uint8_t color)
 bitboard Board::getAllPieces()
 {
 	bitboard result = 0;
-	for (size_t index = 0; index < 6; ++index)
+	for(size_t index = 0; index < 6; ++index)
 	{
 		result |= pieces[0][index];
 		result |= pieces[1][index];
@@ -100,14 +99,13 @@ bitboard Board::getAllPieces()
 bitboard Board::getOccupied(int color)
 {
 	bitboard result = 0;
-	for (size_t index = 0; index < 6; index++)
+	for(size_t index = 0; index < 6; index++)
 	{
 		result |= pieces[color][index];
 	}
 
 	return result;
 }
-
 
 unsigned int Board::positionToIndex(const char* position)
 {
@@ -120,8 +118,8 @@ unsigned int Board::positionToIndex(const char* position)
 
 Piece Board::getPieceAt(int position)
 {
-	// @TODO Optimize with SIMD 
-	for (int color = 0; color < 2; color++)
+	// @TODO Optimize with SIMD
+	for(int color = 0; color < 2; color++)
 	{
 		for(int type = 0; type < 6; type++)
 		{
@@ -178,7 +176,7 @@ void Board::setBoard(std::string fen)
 				currentPiece = tolower(currentPiece);
 			}
 
-			type = types.find(currentPiece)->second; 
+			type = types.find(currentPiece)->second;
 
 			row = currentPosition / 8;
 			column = currentPosition % 8;
@@ -206,9 +204,13 @@ void Board::setBoard(std::string fen)
 	//check if en passant is possible
 	//concat length of string + space
 	std::string enPassant = fen.substr(0, fen.find(' '));
-	const char* enPassantChar = enPassant.c_str();
-	this->enPassant = (bitboard)1 << positionToIndex(enPassantChar);
-	fen = fen.erase(0, enPassant.length() + 1);
+	this->enPassant = 0;
+	if(enPassant.size() == 2)
+	{
+		const char* enPassantChar = enPassant.c_str();
+		this->enPassant = (bitboard)1 << positionToIndex(enPassantChar);
+		fen = fen.erase(0, enPassant.length() + 1);
+	}
 
 	//save number of halfmoves in attribute
 	//concat number + space
@@ -258,15 +260,15 @@ std::string Board::getFen()
 			result += "/";
 		}
 	}
-	
+
 	result += " ";
 	result += turn == White ? 'w' : 'b';
 
 	std::string castle = (castleWKingSide == true) ? "K" : "";
-	castle += (castleWQueenSide== true) ? "Q" : "";
+	castle += (castleWQueenSide == true) ? "Q" : "";
 	castle += (castleBKingSide == true) ? "k" : "";
 	castle += (castleBQueenSide == true) ? "q" : "";
-	result += " "+castle;
+	result += " " + castle;
 
 	result += " " + enPassant;
 	result += " " + intToString(halfmoveClock);
@@ -286,10 +288,10 @@ void Board::printBitboard()
 {
 	char result[64];
 
-	for (int index = 0; index < 64; index++)
+	for(int index = 0; index < 64; index++)
 	{
 		Piece piece = getPieceAt(index);
-		if (piece.color >= 0)
+		if(piece.color >= 0)
 		{
 			result[index] = (piece.color == 0) ? toupper(kPieceChars[piece.type]) : kPieceChars[piece.type];
 			continue;
@@ -298,18 +300,18 @@ void Board::printBitboard()
 	}
 
 	std::cout << "\n|  A  B  C  D  E  F  G  H  |\n|8";
-	for (short row = 7; row >= 0; --row)
+	for(short row = 7; row >= 0; --row)
 	{
-		for (short col = 0; col < 8; ++col)
+		for(short col = 0; col < 8; ++col)
 		{
 			int index = row * 8 + col;
 			std::cout << ' ' << result[index] << ' ';
-			if ((index + 1) % 8 == 0 && index + 1 != 8)
+			if((index + 1) % 8 == 0 && index + 1 != 8)
 			{
 				std::cout << row + 1 << "|\n"
-					<< "|" << row;
+									<< "|" << row;
 			}
-			else if (index + 1 != 8)
+			else if(index + 1 != 8)
 				std::cout << "";
 		}
 	}
