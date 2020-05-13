@@ -12,13 +12,14 @@ class MoveGeneration
 {
 private:
 	Board* board;
-	
-	bitboard getPawnMoves(uint8_t position);
-	bitboard getKnightMoves(uint8_t position);
-	bitboard getBishopMoves(uint8_t position);
-	bitboard getRookMoves(uint8_t position);
-	bitboard getQueenMoves(uint8_t position);
-	bitboard getKingMoves(uint8_t position);
+
+	bitboard getPawnMoves(int position);
+	bitboard getPawnCaptures(int position);
+	bitboard getKnightMoves(int position);
+	bitboard getBishopMoves(int position);
+	bitboard getRookMoves(int position);
+	bitboard getQueenMoves(int position);
+	bitboard getKingMoves(int position);
 
 	bitboard northOccluded(bitboard board);
 	bitboard eastOccluded(bitboard board);
@@ -31,10 +32,10 @@ private:
 	bitboard southWestOccluded(bitboard board);
 
 	bitboard getEnPassant(int square);
-	bitboard getCastlingMoves(uint8_t square);
+	bitboard getCastlingMoves(int square);
 
 public:
-	MoveGeneration(Board *board);
+	MoveGeneration(Board* board);
 	std::vector<Move> getAllMoves();
 
 	bool isInCheck(int square);

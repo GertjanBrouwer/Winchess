@@ -4,11 +4,10 @@
 #include <stack>
 #include <vector>
 
-
 struct Move
 {
-	short startPosition;
-	short targetPosition;
+	unsigned int startPosition;
+	unsigned int targetPosition;
 };
 
 typedef uint64_t bitboard;
@@ -22,6 +21,9 @@ const bitboard kStartKing = 0b00010000000000000000000000000000000000000000000000
 
 const bitboard kStartAllWhite = 0b0000000000000000000000000000000000000000000000001111111111111111;
 const bitboard kStartAllBlack = 0b1111111111111111000000000000000000000000000000000000000000000000;
+
+
+const bitboard kCenterRanks = 0b0000000000000000000000011111111111111111000000000000000000000000;
 
 const bitboard kStartPiecePositions[] = {kStartPawn, kStartKnight, kStartBishop, kStartRook, kStartQueen, kStartKing};
 const bitboard kPieceColor[] = {kStartAllWhite, kStartAllBlack};
@@ -42,14 +44,14 @@ enum PieceType
 
 enum PieceColor
 {
-	White, 
+	White,
 	Black
 };
 
 struct Piece
 {
-	short color;
-	short type;
+	int color;
+	int type;
 };
 
 class Board
@@ -57,20 +59,19 @@ class Board
 public:
 	PieceColor turn = White;
 	bitboard pieces[2][6];
-	bool wQueenSide = true;
-	bool wKingSide = true;
-	bool bQueenSide = true;
-	bool bKingSide = true;
-	std::stack<Move> moves;
-	
+	bool castleWQueenSide = true;
+	bool castleWKingSide = true;
+	bool castleBQueenSide = true;
+	bool castleBKingSide = true;
+	bitboard enPassant = 0;
 	Board();
 	void printBitboard();
 	void moveByChar(const char* move);
 	void doMove(Move move);
 	void undoMove(Move move);
-	bitboard getOccupied(uint8_t color);
-	uint8_t positionToIndex(const char* position);
-	Piece getPieceAt(uint8_t index);
+	bitboard getOccupied(int color);
+	unsigned int positionToIndex(const char* position);
+	Piece getPieceAt(int index);
 	void setBoard(std::string fen);
 	std::string getFen();
 	bitboard getAllPieces();
@@ -79,13 +80,6 @@ public:
 
 private:
 	void clearBoard();
-
-	char activeColor;
-	bool whiteQueenCastle;
-	bool whiteKingCastle;
-	bool blackQueenCastle;
-	bool blackKingCastle;
-	std::string enPassant;
 	int halfmoveClock;
 	int FullmoveNumber;
 };
