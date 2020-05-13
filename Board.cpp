@@ -97,21 +97,6 @@ bitboard Board::getAllPieces()
 	return result;
 }
 
-void Board::undoMove(Move move)
-{
-	doMove({move.targetPosition, move.startPosition});
-	//@TODO handle undo move
-	//@TODO handle captures
-	//@TODO handle castling
-	//@TODO handle en passant
-	//@TODO handle promotions	
-}
-
-void Board::updateCombinedBitboard()
-{
-	// @TODO Cache and update combined bit boards here (Occupied (by color), AllPieces, Empty?, etc..)
-}
-
 bitboard Board::getOccupied(int color)
 {
 	bitboard result = 0;
@@ -123,18 +108,6 @@ bitboard Board::getOccupied(int color)
 	return result;
 }
 
-// Returns a bitboard containing all the pieces on the board
-bitboard Board::getAllPieces()
-{
-	bitboard result = 0;
-	for (size_t index = 0; index < 6; index++)
-	{
-		result |= pieces[White][index];
-		result |= pieces[Black][index];
-	}
-
-	return result;
-}
 
 unsigned int Board::positionToIndex(const char* position)
 {

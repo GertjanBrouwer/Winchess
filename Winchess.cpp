@@ -11,7 +11,7 @@ int main()
 
 	MoveGeneration* generation = new MoveGeneration(board);
 
-	MoveGeneration* generation = new MoveGeneration(board);
+	UCI* uci = new UCI(board);
 
 
 	
