@@ -1,6 +1,14 @@
 #pragma once
 #include <iostream>
 #include <map>
+#include <stack>
+#include <vector>
+
+struct Move
+{
+	unsigned int startPosition;
+	unsigned int targetPosition;
+};
 
 typedef uint64_t bitboard;
 
@@ -14,6 +22,9 @@ const bitboard kStartKing = 0b00010000000000000000000000000000000000000000000000
 const bitboard kStartAllWhite = 0b0000000000000000000000000000000000000000000000001111111111111111;
 const bitboard kStartAllBlack = 0b1111111111111111000000000000000000000000000000000000000000000000;
 
+
+const bitboard kCenterRanks = 0b0000000000000000000000011111111111111111000000000000000000000000;
+
 const bitboard kStartPiecePositions[] = {kStartPawn, kStartKnight, kStartBishop, kStartRook, kStartQueen, kStartKing};
 const bitboard kPieceColor[] = {kStartAllWhite, kStartAllBlack};
 
@@ -21,35 +32,56 @@ const char kPieceChars[] = {'p', 'n', 'b', 'r', 'q', 'k'};
 
 const std::map<char, uint8_t> types = {{'p', 0}, {'n', 1}, {'b', 2}, {'r', 3}, {'q', 4}, {'k', 5}};
 
-struct piece
+enum PieceType
 {
-	short color;
-	short type;
+	Pawn,
+	Knight,
+	Bishop,
+	Rook,
+	Queen,
+	King
+};
+
+enum PieceColor
+{
+	White,
+	Black
+};
+
+
+struct Piece
+{
+	int color;
+	int type;
 };
 
 class Board
 {
 public:
+	PieceColor turn = White;
 	bitboard pieces[2][6];
-
+	bool castleWQueenSide = true;
+	bool castleWKingSide = true;
+	bool castleBQueenSide = true;
+	bool castleBKingSide = true;
+	bitboard enPassant = 0;
 	Board();
 	void printBitboard();
-	void move(const char* move);
-	uint8_t positionToIndex(const char* position);
-	piece getPieceAt(uint8_t index);
+	void moveByChar(const char* move);
+	void doMove(Move move);
+	void undoMove(Move move);
+	bitboard getOccupied(int color);
+	unsigned int positionToIndex(const char* position);
+	Piece getPieceAt(int index);
 	void setBoard(std::string fen);
 	std::string getFen();
-	std::string intToString(int &i);
+	bitboard getAllPieces();
+	void updateCombinedBitboard();
+	bitboard getOccupied(uint8_t color);
+	std::string intToString(int& i);
 
 private:
 	void clearBoard();
-
-	char activeColor;
-	bool whiteQueenCastle;
-	bool whiteKingCastle;
-	bool blackQueenCastle;
-	bool blackKingCastle;
-	std::string enPassant;
 	int halfmoveClock;
 	int FullmoveNumber;
 };

@@ -4,9 +4,9 @@
 
 Board::Board()
 {
-	for(uint8_t color = 0; color < 2; color++)
+	for(int color = 0; color < 2; color++)
 	{
-		for(uint8_t type = 0; type < 6; type++)
+		for(int type = 0; type < 6; type++)
 		{
 			// kStartPiecePositions = bitboards of start position of all the pieces
 			// kPieceColor = bitboards of the chess piece colors
@@ -30,17 +30,84 @@ Board::Board()
 // resulting in : 000000001111011100001000
 //
 // When formatting into a board it looks like this : 00000000 11110111 00001000
-void Board::move(const char* move)
+void Board::moveByChar(const char* moveChar)
 {
-	uint8_t startPosition = positionToIndex(move);
-	uint8_t targetPosition = positionToIndex(&move[2]);
-	piece movePiece = getPieceAt(startPosition);
-	if(movePiece.color < 0)
-		return;
-	pieces[movePiece.color][movePiece.type] = (pieces[movePiece.color][movePiece.type] - ((bitboard)1 << startPosition)) + ((bitboard)1 << targetPosition);
+	unsigned int startPosition = positionToIndex(moveChar);
+	unsigned int targetPosition = positionToIndex(&moveChar[2]);
+	doMove({startPosition, targetPosition});
 }
 
-uint8_t Board::positionToIndex(const char* position)
+void Board::doMove(Move move)
+{
+	int from = move.startPosition;
+	int to = move.targetPosition;
+	Piece piece = getPieceAt(from);
+
+	// Check if piece exists on location
+	if(piece.color < 0)
+		return;
+
+	//@TODO handle captures
+	//@TODO handle castling
+	//@TODO handle en passant
+	//@TODO handle promotions
+
+	pieces[piece.color][piece.type] = (pieces[piece.color][piece.type] - ((bitboard)1 << from)) + ((bitboard)1 << to);
+
+	turn = (PieceColor)(1 - turn);
+}
+
+void Board::undoMove(Move move)
+{
+	doMove({move.targetPosition, move.startPosition});
+	//@TODO handle undo move
+	//@TODO handle captures
+	//@TODO handle castling
+	//@TODO handle en passant
+	//@TODO handle promotions
+}
+
+void Board::updateCombinedBitboard()
+{
+	// @TODO Cache and update combined bit boards here (Occupied (by color), AllPieces, Empty?, etc..)
+}
+
+bitboard Board::getOccupied(uint8_t color)
+{
+	bitboard result = 0;
+	for(size_t index = 0; index < 6; ++index)
+	{
+		result |= pieces[color][index];
+	}
+
+	return result;
+}
+
+// Returns a bitboard containing all the pieces on the board
+bitboard Board::getAllPieces()
+{
+	bitboard result = 0;
+	for(size_t index = 0; index < 6; ++index)
+	{
+		result |= pieces[0][index];
+		result |= pieces[1][index];
+	}
+
+	return result;
+}
+
+bitboard Board::getOccupied(int color)
+{
+	bitboard result = 0;
+	for(size_t index = 0; index < 6; index++)
+	{
+		result |= pieces[color][index];
+	}
+
+	return result;
+}
+
+unsigned int Board::positionToIndex(const char* position)
 {
 	// Calculate index using ASCII values (a = 97 and 1 = 49)
 	// b : 98 - 97 = 1
@@ -49,14 +116,15 @@ uint8_t Board::positionToIndex(const char* position)
 	return position[0] - 97 + (position[1] - 49) * 8;
 }
 
-piece Board::getPieceAt(uint8_t index)
+Piece Board::getPieceAt(int position)
 {
-	for(uint8_t color = 0; color < 2; color++)
+	// @TODO Optimize with SIMD
+	for(int color = 0; color < 2; color++)
 	{
-		for(uint8_t type = 0; type < 6; type++)
+		for(int type = 0; type < 6; type++)
 		{
 			// Move bit at index position to front and check if piece is present (bit and-operation)
-			if((pieces[color][type] >> index) & 0b1)
+			if((pieces[color][type] >> position) & 0b1)
 			{
 				return {color, type};
 			}
@@ -108,7 +176,7 @@ void Board::setBoard(std::string fen)
 				currentPiece = tolower(currentPiece);
 			}
 
-			type = types.find(currentPiece)->second; 
+			type = types.find(currentPiece)->second;
 
 			row = currentPosition / 8;
 			column = currentPosition % 8;
@@ -121,22 +189,28 @@ void Board::setBoard(std::string fen)
 
 	//check if next char w or b for turn
 	//concat 1char + space
-	activeColor = (fen.substr(0, fen.find(' ')) == "w") ? 'w' : 'b';
+	turn = (fen.substr(0, fen.find(' ')) == "w") ? White : Black;
 	fen = fen.erase(0, 2);
 
 	//check if possible to castle
 	//concat length of string + space
 	std::string castlemove = fen.substr(0, fen.find(' '));
-	whiteKingCastle = (castlemove.find('K') != std::string::npos) ? true : false;
-	whiteQueenCastle = (castlemove.find('Q') != std::string::npos) ? true : false;
-	blackKingCastle = (castlemove.find('k') != std::string::npos) ? true : false;
-	blackQueenCastle = (castlemove.find('q') != std::string::npos) ? true : false;
+	castleWKingSide = (castlemove.find('K') != std::string::npos) ? true : false;
+	castleWQueenSide = (castlemove.find('Q') != std::string::npos) ? true : false;
+	castleBKingSide = (castlemove.find('k') != std::string::npos) ? true : false;
+	castleBQueenSide = (castlemove.find('q') != std::string::npos) ? true : false;
 	fen = fen.erase(0, castlemove.length() + 1);
 
 	//check if en passant is possible
 	//concat length of string + space
-	enPassant = fen.substr(0, fen.find(' '));
-	fen = fen.erase(0, enPassant.length() + 1);
+	std::string enPassant = fen.substr(0, fen.find(' '));
+	this->enPassant = 0;
+	if(enPassant.size() == 2)
+	{
+		const char* enPassantChar = enPassant.c_str();
+		this->enPassant = (bitboard)1 << positionToIndex(enPassantChar);
+		fen = fen.erase(0, enPassant.length() + 1);
+	}
 
 	//save number of halfmoves in attribute
 	//concat number + space
@@ -160,7 +234,7 @@ std::string Board::getFen()
 		for(uint8_t col = 0; col < 8; col++)
 		{
 			index = row * 8 + col - 8;
-			piece piece = getPieceAt(index);
+			Piece piece = getPieceAt(index);
 
 			if(!(piece.color == -1 || piece.type == -1))
 			{
@@ -186,15 +260,15 @@ std::string Board::getFen()
 			result += "/";
 		}
 	}
-	
-	result += " ";
-	result += activeColor;
 
-	std::string castle = (whiteKingCastle == true) ? "K" : "";
-	castle += (whiteQueenCastle == true) ? "Q" : "";
-	castle += (blackKingCastle == true) ? "k" : "";
-	castle += (blackQueenCastle == true) ? "q" : "";
-	result += " "+castle;
+	result += " ";
+	result += turn == White ? 'w' : 'b';
+
+	std::string castle = (castleWKingSide == true) ? "K" : "";
+	castle += (castleWQueenSide == true) ? "Q" : "";
+	castle += (castleBKingSide == true) ? "k" : "";
+	castle += (castleBQueenSide == true) ? "q" : "";
+	result += " " + castle;
 
 	result += " " + enPassant;
 	result += " " + intToString(halfmoveClock);
@@ -210,14 +284,13 @@ std::string Board::intToString(int& i)
 
 	return ss.str();
 }
-
 void Board::printBitboard()
 {
 	char result[64];
 
-	for(uint8_t index = 0; index < 64; index++)
+	for(int index = 0; index < 64; index++)
 	{
-		piece piece = getPieceAt(index);
+		Piece piece = getPieceAt(index);
 		if(piece.color >= 0)
 		{
 			result[index] = (piece.color == 0) ? toupper(kPieceChars[piece.type]) : kPieceChars[piece.type];
@@ -227,16 +300,16 @@ void Board::printBitboard()
 	}
 
 	std::cout << "\n|  A  B  C  D  E  F  G  H  |\n|8";
-	for(short row = 7; row >= 0; row--)
+	for(short row = 7; row >= 0; --row)
 	{
-		for(short col = 0; col < 8; col++)
+		for(short col = 0; col < 8; ++col)
 		{
-			uint8_t index = row * 8 + col;
+			int index = row * 8 + col;
 			std::cout << ' ' << result[index] << ' ';
 			if((index + 1) % 8 == 0 && index + 1 != 8)
 			{
 				std::cout << row + 1 << "|\n"
-						  << "|" << row;
+									<< "|" << row;
 			}
 			else if(index + 1 != 8)
 				std::cout << "";

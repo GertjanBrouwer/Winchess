@@ -105,7 +105,7 @@ void UCI::inputPosition()
 		{
 			std::cout << cmd.substr(0, 4) << std::endl;
 
-			board->move(cmd.substr(0, 4).c_str());
+			board->moveByChar(cmd.substr(0, 4).c_str());
 
 			//remove the first move in the list
 			cmd = cmd.erase(0, 5);
