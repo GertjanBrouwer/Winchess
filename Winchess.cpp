@@ -45,7 +45,6 @@ void TestDepth1(Board* board, MoveGeneration* mg)
 				endl;
 	}
 
-
 	std::cout << "Total: " << total << std::endl;
 	std::cout << "Success: " << success << std::endl;
 }
@@ -58,46 +57,30 @@ int main()
 
 	UCI* uci = new UCI(board);
 
-	board->setBoard("b1k5/3n3p/8/R1Ppq3/P2r4/N2p3K/3P3n/2B5 w - - 0 1");
+	board->setBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
 	board->printBitboard();
-	Board* board2 = new Board(board);
-	board2->printBitboard();
 
-	Board* board3 = board->getBoardWithMove(Move{12, 20});
-	board->printBitboard();
+	auto foundMoves = generation->getAllMoves();
 
-	TestDepth1(board, generation);
 
-	uci->Read();
+	//TestDepth1(board, generation);
+
 	double duration;
-	start = std::clock();
+	auto start = std::clock();
 
-	int moves = generation->perft(1);
-	std::cout << "Amount of found moves: " << moves << std::endl;
+	int moves = generation->perft(6);
+	std::cout << "Amount of found moves at depth 6: " << moves << std::endl;
 
 	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
 
 	std::cout << "Duration: " << duration << '\n';
-
-	start = std::clock();
-	for(auto i = 0; i < 19900000; i++)
-	{
-		board2 = new Board(board);
-		delete board2;
-	}
-	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
-	std::cout << "Duration loop: " << duration << '\n';
-
-	do
-	{
-		std::cout << '\n' << "Press a key to continue...";
-	} while(std::cin.get() != '\n');
+	uci->Read();
 }
 
 int test(int depth)
 {
-	if(depth <= 0)
+	if (depth <= 0)
 		return 1;
 	return test(depth - 1);
 }

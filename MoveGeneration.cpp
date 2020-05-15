@@ -35,7 +35,8 @@ std::vector<Move> MoveGeneration::getAllMoves()
 		_BitScanForward64(&pieceIndex, allPieces);
 
 		// Remove piece from allPieces
-		allPieces &= ~((bitboard)1 << pieceIndex);
+		bitboard originMask = (bitboard)1 << pieceIndex;
+		allPieces &= ~originMask;
 
 		Piece piece = board->getPieceAt(pieceIndex);
 
@@ -66,22 +67,20 @@ std::vector<Move> MoveGeneration::getAllMoves()
 			moves &= ~((bitboard)1 << destination);
 
 
-			
+			bitboard destinationMask = (bitboard)1 << destination;
 			// Check if move result is not colliding with your own pieces
-			if ((bitboard)1 << destination & ~board->getOccupied(board->turn))
+			if (destinationMask & ~board->getOccupied(board->turn))
 			{
 				// Do move
 				board->pieces[board->turn][piece.type] &= ~((bitboard)1 << pieceIndex);
-				bitboard destinationMask = (bitboard)1 << destination;
 
-				board->pieces[board->turn][piece.type] &= ~fromMask;
+				board->pieces[board->turn][piece.type] &= ~originMask;
 				board->pieces[board->turn][piece.type] |= destinationMask;
 
-				bitboard destinationMask = (bitboard)1 << destination;
-				
+
 				bitboard pawnPieceRemoved = board->pieces[!board->turn][Pawn] & destinationMask;
 				board->pieces[!board->turn][Pawn] &= ~pawnPieceRemoved;
-				
+
 				bitboard knighPieceRemoved = board->pieces[!board->turn][Knight] & destinationMask;
 				board->pieces[!board->turn][Knight] &= ~knighPieceRemoved;
 
@@ -90,33 +89,33 @@ std::vector<Move> MoveGeneration::getAllMoves()
 
 				bitboard rookPieceRemoved = board->pieces[!board->turn][Rook] & destinationMask;
 				board->pieces[!board->turn][Rook] &= ~rookPieceRemoved;
-				
+
 				bitboard queenPieceRemoved = board->pieces[!board->turn][Queen] & destinationMask;
 				board->pieces[!board->turn][Queen] &= ~queenPieceRemoved;
-				
+
 
 				bitboard b = board->pieces[board->turn][King];
 				int kingPosition = getBitIndex(b);
 				if (!isInCheck(kingPosition))
-					legalMoves.push_back({pieceIndex, destination});
+				{
 					// Promotions
-					if (kOuterRank & destinationMask)
+					if (piece.type == Pawn && kOuterRank & destinationMask)
 					{
-						legalMoves.push_back({squareIndex, destination, Queen});
-						legalMoves.push_back({squareIndex, destination, Rook});
-						legalMoves.push_back({squareIndex, destination, Bishop});
-						legalMoves.push_back({squareIndex, destination, Knight});
+						legalMoves.push_back({pieceIndex, destination, Queen});
+						legalMoves.push_back({pieceIndex, destination, Rook});
+						legalMoves.push_back({pieceIndex, destination, Bishop});
+						legalMoves.push_back({pieceIndex, destination, Knight});
 					}
 					else
 					{
-						legalMoves.push_back({squareIndex, destination});
+						legalMoves.push_back({pieceIndex, destination});
 					}
 				}
 
 				//Undo move
 				board->pieces[board->turn][piece.type] &= ~destinationMask;
 				board->pieces[board->turn][piece.type] |= (bitboard)1 << pieceIndex;
-				
+
 				board->pieces[!board->turn][Pawn] |= pawnPieceRemoved;
 				board->pieces[!board->turn][Knight] |= knighPieceRemoved;
 				board->pieces[!board->turn][Bishop] |= bishopPieceRemoved;
@@ -176,7 +175,7 @@ bitboard MoveGeneration::getPawnCaptures(int position)
 	return foundMoves;
 }
 
-bitboard MoveGeneration::getKnightMoves(int position)
+bitboard MoveGeneration::getKnightMoves(int position) 
 {
 	bitboard piecePosition = (bitboard)1 << position;
 	bitboard foundMoves = 0;
@@ -471,11 +470,8 @@ int MoveGeneration::perft(int depth)
 	for (int i = 0; i < move_list.size(); i++)
 	{
 		board = board->getBoardWithMove(move_list[i]);
-		int kingBitboard = board->pieces[board->turn][King];
-		if (kingBitboard == 0 || !isInCheck(getBitIndex(kingBitboard)))
-		{
-			nodes += perft(depth - 1);
-		}
+
+		nodes += perft(depth - 1);
 
 		Board* original = board->origin;
 

@@ -1,6 +1,7 @@
 #pragma once
 #include <map>
 #include <vector>
+#include <iostream>
 
 struct Move
 {
@@ -72,6 +73,7 @@ public:
 	Move lastMove;
 	Board* origin = nullptr;
 	BoardBitboards bitboardCache;
+	bitboard enPassant;
 	Board();
 	Board(Board* board);
 	void printBitboard();
