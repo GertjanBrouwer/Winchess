@@ -25,22 +25,22 @@ void TestDepth1(Board* board, MoveGeneration* mg)
 	}
 	while (getline(myfile, line))
 	{
+		total++;
+		if (total < 900)
+		{
+			success++;
+			continue;
+		}
 		auto fen = line.substr(0, line.find(" d1 "));
 		board->setBoard(fen);
 
-		auto expectedMoves = line.erase(0, fen.length() + 4);
-
+		auto expectedMoves = line.erase(0, line.find(" d4 ") + 4);
 		expectedMoves = expectedMoves.substr(0, expectedMoves.find(" ;"));
 
-		auto foundMoves = mg->getAllMoves().size();
-
-		total++;
+		int foundMoves = mg->perft(4);
 
 		if (foundMoves == std::stoi(expectedMoves))
-		{
 			success++;
-			//std::cout << "Success | " << fen << std::endl;
-		}
 		else
 			std::cout << "Failed | Expected: " << expectedMoves << " - Found: " << foundMoves << " | " << fen << std::
 				endl;
@@ -58,10 +58,9 @@ int main()
 
 	UCI* uci = new UCI(board);
 
-	board->setBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+	board->setBoard("rnbqk1nr/pp1pppb1/2p5/6p1/8/NP1P4/P1PQPPP1/R3KBNR b KQq -");
 
-	board->printBitboard();
-
+	board->doMove({54, 0});
 	auto foundMoves = generation->getAllMoves();
 
 	//TestDepth1(board, generation);
@@ -70,13 +69,17 @@ int main()
 
 	std::cout << eval->getBoardValue() << std::endl;
 
-	//TestDepth1(board, generation);
+	TestDepth1(board, generation);
 
 	double duration;
 	auto start = std::clock();
+	int moves = generation->perft(2);
 
-	int moves = generation->perft(6);
-	std::cout << "Amount of found moves at depth 6: " << moves << std::endl;
+	std::cout << "Amount of found moves at depth 5: " << moves << std::endl;
+	std::cout << "Captures: " << board->captures << std::endl;
+	std::cout << "Castles: " << board->castles << std::endl;
+	std::cout << "Promotions: " << board->promotions << std::endl;
+	std::cout << "En passant: " << board->enpassants << std::endl;
 
 	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
 

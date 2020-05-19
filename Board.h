@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 
+
 struct Move
 {
 	unsigned int startPosition;
@@ -21,7 +22,6 @@ const bitboard kStartKing = 0b00010000000000000000000000000000000000000000000000
 
 const bitboard kStartAllWhite = 0b0000000000000000000000000000000000000000000000001111111111111111;
 const bitboard kStartAllBlack = 0b1111111111111111000000000000000000000000000000000000000000000000;
-
 
 const bitboard kCenterRanks = 0b0000000000000000000000011111111111111111000000000000000000000000;
 
@@ -90,9 +90,14 @@ public:
 	bitboard getOccupied(uint8_t color);
 	std::string intToString(int& i);
 
+
+	static int captures;
+	static int castles;
+	static int enpassants;
+	static int promotions;
+
 private:
 	void clearBoard();
 	int halfmoveClock;
 	int FullmoveNumber;
 };
-
