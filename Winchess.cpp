@@ -59,7 +59,6 @@ int main()
 
 	UCI* uci = new UCI(board);
 
-	board->setBoard("b1k5/3n3p/8/R1Ppq3/P2r4/N2p3K/3P3n/2B5 w - - 0 1");
 	board->setBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
 	board->printBitboard();
