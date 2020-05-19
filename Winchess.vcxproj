@@ -148,6 +148,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Board.cpp" />
+    <ClCompile Include="Evaluation.cpp" />
     <ClCompile Include="UCI.cpp" />
     <ClCompile Include="MoveGeneration.cpp" />
     <ClCompile Include="Winchess.cpp" />
@@ -157,6 +158,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Board.h" />
+    <ClInclude Include="Evaluation.h" />
     <ClInclude Include="MoveGeneration.h" />
     <ClInclude Include="UCI.h" />
   </ItemGroup>
