@@ -454,7 +454,7 @@ bitboard MoveGeneration::getCastlingMoves(int position)
 int MoveGeneration::perft(int depth)
 {
 	int nodes = 0;
-
+	
 	if (depth == 0)
 		return 1;
 
