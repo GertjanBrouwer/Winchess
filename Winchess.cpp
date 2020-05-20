@@ -7,6 +7,7 @@
 #include "Board.h"
 #include "MoveGeneration.h"
 #include "UCI.h"
+#include "Evaluation.h"
 
 void TestDepth1(Board* board, MoveGeneration* mg)
 {
@@ -57,14 +58,17 @@ int main()
 
 	UCI* uci = new UCI(board);
 
-	board->setBoard("rnbqk1nr/pp1pppb1/2p5/6p1/8/NP1P4/P1PQPPP1/R3KBNR b KQq -");
-
+	board->setBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 	board->doMove({54, 0});
 	auto foundMoves = generation->getAllMoves();
 
 	board->printBitboard();
 
-	TestDepth1(board, generation);
+	//TestDepth1(board, generation);
+
+	Evaluation* eval = new Evaluation(board);
+
+	std::cout << eval->getBoardValue() << std::endl;
 
 	double duration;
 	auto start = std::clock();
