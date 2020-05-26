@@ -1,13 +1,14 @@
 #pragma once
-#include <iostream>
 #include <map>
-#include <stack>
 #include <vector>
+#include <iostream>
+
 
 struct Move
 {
 	unsigned int startPosition;
 	unsigned int targetPosition;
+	short promotionPieceType = 0;
 };
 
 typedef uint64_t bitboard;
@@ -21,7 +22,6 @@ const bitboard kStartKing = 0b00010000000000000000000000000000000000000000000000
 
 const bitboard kStartAllWhite = 0b0000000000000000000000000000000000000000000000001111111111111111;
 const bitboard kStartAllBlack = 0b1111111111111111000000000000000000000000000000000000000000000000;
-
 
 const bitboard kCenterRanks = 0b0000000000000000000000011111111111111111000000000000000000000000;
 
@@ -55,6 +55,12 @@ struct Piece
 	int type;
 };
 
+struct BoardBitboards
+{
+	bitboard occupied;
+	bitboard occupiedByColor[2];
+};
+
 class Board
 {
 public:
@@ -64,21 +70,31 @@ public:
 	bool castleWKingSide = true;
 	bool castleBQueenSide = true;
 	bool castleBKingSide = true;
-	bitboard enPassant = 0;
+	Move lastMove;
+	Board* origin = nullptr;
+	BoardBitboards bitboardCache;
+	bitboard enPassant;
 	Board();
+	Board(Board* board);
 	void printBitboard();
 	void moveByChar(const char* move);
 	void doMove(Move move);
-	void undoMove(Move move);
+	Board* getBoardWithMove(Move move);
 	bitboard getOccupied(int color);
 	unsigned int positionToIndex(const char* position);
 	Piece getPieceAt(int index);
 	void setBoard(std::string fen);
 	std::string getFen();
 	bitboard getAllPieces();
-	void updateCombinedBitboard();
+	void updateBitboardCache();
 	bitboard getOccupied(uint8_t color);
 	std::string intToString(int& i);
+
+
+	static int captures;
+	static int castles;
+	static int enpassants;
+	static int promotions;
 
 private:
 	void clearBoard();
