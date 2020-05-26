@@ -4,5 +4,10 @@ cmake_minimum_required(VERSION 3.13)
 project(Tutorial VERSION 1.0)
 set(CMAKE_CXX_STANDARD 14)
 
-# add the executable
-add_executable(cmake_winchess src/Winchess.cpp)
+
+file(GLOB winchess_SRC
+    "*.h"
+    "*.cpp"
+)
+
+add_executable(cmake_winchess ${winchess_SRC})
