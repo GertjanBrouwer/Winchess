@@ -1,25 +1,14 @@
 #include "Evaluation.h"
-#include <iostream>
 #include <intrin.h>
 #include <sstream>
 
-Evaluation::Evaluation(Board* board) 
-{
-	this->board = board;
-}
-
-Evaluation::~Evaluation() 
-{
-
-}
-
-int Evaluation::PopulationCount()
+int Evaluation::GetPieceBasedEvaluation(Board* board)
 {
 	int total = 0;
 	unsigned int whiteTotal = 0;
 	unsigned int blackTotal = 0;
 
-	for(int type = 0; type < 5; type++)
+	for (int type = 0; type < 5; type++)
 	{
 		//count total bits in board white
 		whiteTotal += __popcnt64(board->pieces[White][type]) * typeValue.find(type)->second;
@@ -31,14 +20,16 @@ int Evaluation::PopulationCount()
 	total += whiteTotal;
 	total -= blackTotal;
 
+
+	
 	//return count
 	return total;
 }
 
-std::string Evaluation::getBoardValue() 
+std::string Evaluation::getBoardValue(Board* board)
 {
 	std::stringstream ss;
-	int value = PopulationCount();
+	int value = GetPieceBasedEvaluation(board);
 	std::string color = (value > 0) ? "White " : (value == 0) ? "Even board " : "Black ";
 	ss << value;
 	return color + ss.str();

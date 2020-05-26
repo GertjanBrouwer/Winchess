@@ -22,5 +22,5 @@ public:
 private:
 	std::string engineName;
 	Board* board;
-	char command[256];
+	char command[2048];
 };

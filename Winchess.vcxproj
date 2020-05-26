@@ -150,6 +150,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Board.cpp" />
+    <ClCompile Include="Converter.cpp" />
     <ClCompile Include="Evaluation.cpp" />
     <ClCompile Include="UCI.cpp" />
     <ClCompile Include="MoveGeneration.cpp" />
@@ -160,6 +161,7 @@
     <None Include=".clang-format" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Converter.h" />
     <ClInclude Include="Search.h" />
     <ClInclude Include="Board.h" />
     <ClInclude Include="Evaluation.h" />
