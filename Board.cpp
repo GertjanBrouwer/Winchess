@@ -153,10 +153,10 @@ void Board::doMove(Move move)
 	}
 
 	// En passant
-
-	int diagMove = (to - from) % 2;
-	if(piece.type == Pawn && (diagMove == 1 || diagMove == -1) && (getOccupied(1 - piece.color) & toMask) == 0)
+	int diagonalMove = (to - from) % 2;
+	if(piece.type == Pawn && (diagonalMove == 1 || diagonalMove == -1) && (getOccupied(1 - piece.color) & toMask) == 0)
 	{
+		captures++;
 		enpassants++;
 		if(piece.color == White)
 			pieces[Black][Pawn] -= toMask >> 8;
@@ -392,7 +392,7 @@ std::string Board::intToString(int& i)
 {
 	std::stringstream ss;
 	ss << i;
-
+	
 	return ss.str();
 }
 
