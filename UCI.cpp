@@ -4,6 +4,7 @@
 #include <iostream>
 #include <thread>
 #include <algorithm>
+#include <cstring>
 
 #include "Converter.h"
 #include "Evaluation.h"

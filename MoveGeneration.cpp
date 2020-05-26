@@ -6,6 +6,14 @@ inline int8_t absDiff(int a, int b)
 	return a < b ? b - a : a - b;
 }
 
+#if __GNUC__
+	return __builtin_ffs(board);
+#elif __INTEL_COMPILER
+	return _bit_scan_forward(board);
+#elif _WIN32
+#else
+	return ffsl(board);
+#endif
 
 MoveGeneration::MoveGeneration(Board* board)
 {
@@ -19,8 +27,7 @@ std::vector<Move> MoveGeneration::getAllMoves()
 
 	while (allPieces)
 	{
-		unsigned long pieceIndexResult;
-		_BitScanForward64(&pieceIndexResult, allPieces);
+		unsigned int pieceIndex = getBitIndex(allPieces);
 		short pieceIndex = pieceIndexResult;
 
 		// Remove piece from allPieces
@@ -56,8 +63,7 @@ std::vector<Move> MoveGeneration::getAllMoves()
 
 		while (moves)
 		{
-			unsigned long destinationIndex;
-			_BitScanForward64(&destinationIndex, moves);
+			unsigned int destination = getBitIndex(allPieces);
 			short destination = destinationIndex;
 			// Remove piece from allPieces
 			moves &= ~((bitboard)1 << destination);
