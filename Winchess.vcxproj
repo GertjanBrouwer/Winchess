@@ -154,11 +154,13 @@
     <ClCompile Include="UCI.cpp" />
     <ClCompile Include="MoveGeneration.cpp" />
     <ClCompile Include="Winchess.cpp" />
+    <ClCompile Include="Search.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Search.h" />
     <ClInclude Include="Board.h" />
     <ClInclude Include="Evaluation.h" />
     <ClInclude Include="MoveGeneration.h" />

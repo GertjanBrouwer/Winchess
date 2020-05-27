@@ -6,8 +6,8 @@
 
 struct Move
 {
-	unsigned int startPosition;
-	unsigned int targetPosition;
+	short startPosition;
+	short targetPosition;
 	short promotionPieceType = 0;
 };
 
