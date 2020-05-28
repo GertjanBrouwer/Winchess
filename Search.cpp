@@ -11,16 +11,20 @@ Move Search::findBestMove(Board* board, int depth, PieceColor computerColor)
 {
 	clock_t begin_time = clock();
 	// Get all the moves available for the computer
-	int alpha = -2000000000, beta = 2000000000;
+	int alpha = INT_MIN, beta = INT_MAX;
 	MoveGeneration* moveGenerator = new MoveGeneration(board);
 
+	// depth - 1 : Because the leaf nodes are on depth is 0 instead of 1
 	CalculatedMove bestMove = alphabeta(board, moveGenerator, depth - 1, alpha, beta, computerColor);
+
 	//std::cout << "info string Depth: " << depth << " | Best move: " << Converter::formatMove(bestMove.move) << " Leaf node value: " << bestMove.value << std::endl;
 
 	auto time = float(clock() - begin_time) / CLOCKS_PER_SEC * 1000;
 	
 	std::cout << "info score cp " << bestMove.value * 100 << " depth " << depth  << " nodes  " << bestMove.nodes << " time " << time << " pv " << Converter::formatMove(bestMove.move)
 						<< std::endl;
+
+	delete moveGenerator;
 	return bestMove.move;
 }
 
@@ -56,10 +60,10 @@ Search::alphabeta(Board* board, MoveGeneration* moveGenerator, int depth, int al
 
 	int nodes = 0;
 	// Go through all the legal moves, searching for the move that is worst for the computer
-	for (unsigned int i = 0; i < moves.size(); i++)
+	for(unsigned int moveIndex = 0; moveIndex < moves.size(); ++moveIndex)
 	{
-		Move move = moves[i];
-		// Update bitboard and recursively call the alpha-beta algorithm
+		Move move = moves[moveIndex];
+		// Update board and recursively call the alpha-beta algorithm
 		Board* newBoard = board->getBoardWithMove(move);
 
 		moveGenerator->board = newBoard;
@@ -74,21 +78,22 @@ Search::alphabeta(Board* board, MoveGeneration* moveGenerator, int depth, int al
 		if (board->turn == White)
 		{
 			// Update the best board value and alpha, the best position the computer is guaranteed of
-			if (i == 0 || calculated_move.value > best_calculated_move.value)
+			if (moveIndex == 0 || calculated_move.value > best_calculated_move.value)
+
 				best_calculated_move = calculated_move;
 			else if(calculated_move.value == best_calculated_move.value && rand() % 500 == 0)
 				best_calculated_move = calculated_move;
 			if (best_calculated_move.value > alpha)
 				alpha = best_calculated_move.value;
 		}
-
 		// Minimize the board's value if it is the opponent's turn to move
 		else
 		{
 			// Update the best board value and beta, the best position the user is guaranteed of
-			if (i == 0 || calculated_move.value < best_calculated_move.value)
+			if (moveIndex == 0 || calculated_move.value < best_calculated_move.value)
 				best_calculated_move = calculated_move;
 			else if(calculated_move.value == best_calculated_move.value && rand() % 500 == 0)
+
 				best_calculated_move = calculated_move;
 			if (best_calculated_move.value < beta)
 				beta = best_calculated_move.value;
