@@ -19,8 +19,6 @@ int Evaluation::GetPieceBasedEvaluation(Board* board)
 	//evaluate count and determine
 	total += whiteTotal;
 	total -= blackTotal;
-
-
 	
 	//return count
 	return total;
@@ -28,9 +26,7 @@ int Evaluation::GetPieceBasedEvaluation(Board* board)
 
 std::string Evaluation::getBoardValue(Board* board)
 {
-	std::stringstream ss;
 	int value = GetPieceBasedEvaluation(board);
 	std::string color = (value > 0) ? "White " : (value == 0) ? "Even board " : "Black ";
-	ss << value;
-	return color + ss.str();
+	return color + std::to_string(value);
 }

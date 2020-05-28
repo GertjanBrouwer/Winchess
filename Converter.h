@@ -18,7 +18,6 @@ public:
 
 	static std::string formatMove(Move move)
 	{
-		auto p2 = formatPosition(move.startPosition);
 		return formatPosition(move.startPosition) + formatPosition(move.targetPosition);
 	}
 };

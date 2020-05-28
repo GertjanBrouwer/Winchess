@@ -90,12 +90,6 @@ public:
 	bitboard getOccupied(uint8_t color);
 	std::string intToString(int& i);
 
-
-	static int captures;
-	static int castles;
-	static int enpassants;
-	static int promotions;
-
 private:
 	void clearBoard();
 	int halfmoveClock;

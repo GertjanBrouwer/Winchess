@@ -17,8 +17,6 @@ Move Search::findBestMove(Board* board, int depth, PieceColor computerColor)
 	// depth - 1 : Because the leaf nodes are on depth is 0 instead of 1
 	CalculatedMove bestMove = alphabeta(board, moveGenerator, depth - 1, alpha, beta, computerColor);
 
-	//std::cout << "info string Depth: " << depth << " | Best move: " << Converter::formatMove(bestMove.move) << " Leaf node value: " << bestMove.value << std::endl;
-
 	auto time = float(clock() - begin_time) / CLOCKS_PER_SEC * 1000;
 	
 	std::cout << "info score cp " << bestMove.value * 100 << " depth " << depth  << " nodes  " << bestMove.nodes << " time " << time << " pv " << Converter::formatMove(bestMove.move)

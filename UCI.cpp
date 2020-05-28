@@ -23,7 +23,7 @@ void UCI::Read()
 	while (true)
 	{
 		//read incomming line and save in char array command
-		std::cin.getline(command, 2048);
+		std::cin.getline(command, 2047);
 		std::cout << "-----------------" << std::endl;
 
 		if (strstr(command, "setoption"))
@@ -148,6 +148,7 @@ void search(Board* board)
 
 void UCI::inputGo()
 {
+	// @TODO Make sure current ai thread isn't running before starting
 	ai_thread_running.exchange(false);
 	ai_thread_running.exchange(true);
 	auto thread = std::thread(search, board);
