@@ -5,9 +5,10 @@
 #include <string>
 
 #include "Board.h"
-#include "MoveGeneration.h"
-#include "UCI.h"
 #include "Evaluation.h"
+#include "MoveGeneration.h"
+#include "Search.h"
+#include "UCI.h"
 
 void TestDepth1(Board* board, MoveGeneration* mg)
 {
@@ -18,15 +19,15 @@ void TestDepth1(Board* board, MoveGeneration* mg)
 	auto total = 0;
 	auto success = 0;
 
-	if (!myfile.is_open())
+	if(!myfile.is_open())
 	{
 		perror("Error open");
 		exit(EXIT_FAILURE);
 	}
-	while (getline(myfile, line))
+	while(getline(myfile, line))
 	{
 		total++;
-		if (total < 900)
+		if(total < 900)
 		{
 			success++;
 			continue;
@@ -39,11 +40,10 @@ void TestDepth1(Board* board, MoveGeneration* mg)
 
 		int foundMoves = mg->perft(4);
 
-		if (foundMoves == std::stoi(expectedMoves))
+		if(foundMoves == std::stoi(expectedMoves))
 			success++;
 		else
-			std::cout << "Failed | Expected: " << expectedMoves << " - Found: " << foundMoves << " | " << fen << std::
-				endl;
+			std::cout << "Failed | Expected: " << expectedMoves << " - Found: " << foundMoves << " | " << fen << std::endl;
 	}
 
 	std::cout << "Total: " << total << std::endl;
@@ -54,41 +54,27 @@ int main()
 {
 	Board* board = new Board();
 
+	board->setBoard("rn1qkbnr/4pp1p/1p4p1/1N1pP3/p2P4/P4N2/1PQ2PPP/R1B1K2R b KQkq - 1 11 ");
+
 	MoveGeneration* generation = new MoveGeneration(board);
 
 	UCI* uci = new UCI(board);
 
-	board->setBoard("rnbqk1nr/pp1pppb1/2p5/6p1/8/NP1P4/P1PQPPP1/R3KBNR b KQq -");
+	//int depth = 2;
+	//while(true)
+	//{
+	//	auto start = std::clock();
+	//	auto bestmove = Search::findBestMove(board, depth, Black);
+	//
+	//	depth++;
+	//}
 
-	board->doMove({54, 0});
-	auto foundMoves = generation->getAllMoves();
-	//TestDepth1(board, generation);
-
-	Evaluation* eval = new Evaluation(board);
-
-	std::cout << eval->getBoardValue() << std::endl;
-
-  //TestDepth1(board, generation);
-
-	double duration;
-	auto start = std::clock();
-	int moves = generation->perft(2);
-
-	std::cout << "Amount of found moves at depth 5: " << moves << std::endl;
-	std::cout << "Captures: " << board->captures << std::endl;
-	std::cout << "Castles: " << board->castles << std::endl;
-	std::cout << "Promotions: " << board->promotions << std::endl;
-	std::cout << "En passant: " << board->enpassants << std::endl;
-
-	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
-
-	std::cout << "Duration: " << duration << '\n';
 	uci->Read();
 }
 
 int test(int depth)
 {
-	if (depth <= 0)
+	if(depth <= 0)
 		return 1;
 	return test(depth - 1);
 }

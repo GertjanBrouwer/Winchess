@@ -12,7 +12,6 @@ const bitboard kOuterRank = 0b11111111000000000000000000000000000000000000000000
 class MoveGeneration
 {
 private:
-	Board* board;
 
 	bitboard getPawnMoves(int position);
 	bitboard getPawnCaptures(int position);
@@ -36,10 +35,12 @@ private:
 	bitboard getCastlingMoves(int square);
 
 public:
+	Board* board;
 	MoveGeneration(Board* board);
 	std::vector<Move> getAllMoves();
 
+	static int getBitIndex(bitboard board);
+	
 	bool isInCheck(int square);
-
 	int perft(int depth);
 };
