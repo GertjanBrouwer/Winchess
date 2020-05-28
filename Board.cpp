@@ -10,9 +10,9 @@ int Board::captures = 0;
 
 Board::Board()
 {
-	for(int color = 0; color < 2; color++)
+	for (int color = 0; color < 2; color++)
 	{
-		for(int type = 0; type < 6; type++)
+		for (int type = 0; type < 6; type++)
 		{
 			// kStartPiecePositions = bitboards of start position of all the pieces
 			// kPieceColor = bitboards of the chess piece colors
@@ -52,9 +52,13 @@ Board::Board(Board* board)
 // When formatting into a board it looks like this : 00000000 11110111 00001000
 void Board::moveByChar(const char* moveChar)
 {
-	unsigned int startPosition = positionToIndex(moveChar);
-	unsigned int targetPosition = positionToIndex(&moveChar[2]);
-	doMove({startPosition, targetPosition});
+	short startPosition = positionToIndex(moveChar);
+	short targetPosition = positionToIndex(&moveChar[2]);
+	short promotionType = 0;
+	if (strlen(moveChar) == 5)
+		promotionType = types.at(moveChar[4]);
+
+	doMove({startPosition, targetPosition, promotionType});
 }
 
 void Board::doMove(Move move)
@@ -64,16 +68,16 @@ void Board::doMove(Move move)
 	Piece piece = getPieceAt(from);
 
 	// Check if piece exists on location
-	if(piece.color < 0)
+	if (piece.color < 0)
 		return;
 
 	bitboard fromMask = (bitboard)1 << from;
 	bitboard toMask = (bitboard)1 << to;
 
 	// Captures
-	for(int i = 0; i < 6; ++i)
+	for (int i = 0; i < 6; ++i)
 	{
-		if(pieces[White][i] & toMask || pieces[Black][i] & toMask)
+		if (pieces[White][i] & toMask || pieces[Black][i] & toMask)
 			captures++;
 	}
 
@@ -92,12 +96,12 @@ void Board::doMove(Move move)
 	pieces[Black][King] &= ~toMask;
 
 	// Castling
-	if(piece.type == King && abs(from - to) == 2)
+	if (piece.type == King && abs(from - to) == 2)
 	{
 		castles++;
 		bitboard colorBitboard = piece.color == White ? kStartAllWhite : kStartAllBlack;
 
-		if(from - to < 0)
+		if (from - to < 0)
 		{
 			//King side
 			bitboard kingSideBitboard = 0b1000000000000000000000000000000000000000000000000000000010000000;
@@ -117,18 +121,18 @@ void Board::doMove(Move move)
 		}
 	}
 
-	if(toMask == 128)
+	if (toMask == 128)
 		castleWKingSide = false;
-	if(toMask == 1)
+	if (toMask == 1)
 		castleWQueenSide = false;
-	if(toMask == 0x8000000000000000)
+	if (toMask == 0x8000000000000000)
 		castleBKingSide = false;
-	if(toMask == 0x100000000000000)
+	if (toMask == 0x100000000000000)
 		castleBQueenSide = false;
 
-	if(piece.type == King)
+	if (piece.type == King)
 	{
-		if(piece.color == White)
+		if (piece.color == White)
 		{
 			castleWKingSide = false;
 			castleWQueenSide = false;
@@ -140,15 +144,15 @@ void Board::doMove(Move move)
 		}
 	}
 
-	if(piece.type == Rook)
+	if (piece.type == Rook)
 	{
-		if(from == 0 && piece.color == White)
+		if (from == 0 && piece.color == White)
 			castleWQueenSide = false;
-		if(from == 7 && piece.color == White)
+		if (from == 7 && piece.color == White)
 			castleWKingSide = false;
-		if(from == 56 && piece.color == Black)
+		if (from == 56 && piece.color == Black)
 			castleBQueenSide = false;
-		if(from == 63 && piece.color == Black)
+		if (from == 63 && piece.color == Black)
 			castleBKingSide = false;
 	}
 
@@ -158,19 +162,20 @@ void Board::doMove(Move move)
 	{
 		captures++;
 		enpassants++;
-		if(piece.color == White)
+		if (piece.color == White)
 			pieces[Black][Pawn] -= toMask >> 8;
 		else
 			pieces[White][Pawn] -= toMask << 8;
 	}
 
-	if(piece.type == Pawn && abs(to - from) == 16)
+	enPassant = 0;
+	if (piece.type == Pawn && abs(to - from) == 16)
 	{
 		enPassant = (bitboard)1 << ((to + from) / 2);
 	}
 
 	// Promotions
-	if(move.promotionPieceType != 0)
+	if (move.promotionPieceType != 0)
 	{
 		promotions++;
 		pieces[piece.color][move.promotionPieceType] |= toMask;
@@ -196,7 +201,7 @@ void Board::updateBitboardCache()
 {
 	bitboardCache.occupiedByColor[White] = 0;
 	bitboardCache.occupiedByColor[Black] = 0;
-	for(size_t index = 0; index < 6; index++)
+	for (size_t index = 0; index < 6; index++)
 	{
 		bitboardCache.occupiedByColor[White] |= pieces[White][index];
 		bitboardCache.occupiedByColor[Black] |= pieces[Black][index];
@@ -228,12 +233,12 @@ unsigned int Board::positionToIndex(const char* position)
 Piece Board::getPieceAt(int position)
 {
 	// @TODO Optimize with SIMD
-	for(int color = 0; color < 2; color++)
+	for (int color = 0; color < 2; color++)
 	{
-		for(int type = 0; type < 6; type++)
+		for (int type = 0; type < 6; type++)
 		{
 			// Move bit at index position to front and check if piece is present (bit and-operation)
-			if((pieces[color][type] >> position) & 0b1)
+			if ((pieces[color][type] >> position) & 0b1)
 			{
 				return {color, type};
 			}
@@ -245,9 +250,9 @@ Piece Board::getPieceAt(int position)
 
 void Board::clearBoard()
 {
-	for(uint8_t color = 0; color < 2; ++color)
+	for (uint8_t color = 0; color < 2; ++color)
 	{
-		for(uint8_t type = 0; type < 6; ++type)
+		for (uint8_t type = 0; type < 6; ++type)
 		{
 			pieces[color][type] = 0;
 		}
@@ -263,23 +268,23 @@ void Board::setBoard(std::string fen)
 	std::string fenBoard = fen.substr(0, fen.find(' '));
 	fen = fen.erase(0, fenBoard.length() + 1);
 
-	for(uint8_t index = 0; index < fenBoard.length(); ++index)
+	for (uint8_t index = 0; index < fenBoard.length(); ++index)
 	{
 		char currentPiece = fenBoard[index];
 
-		if(isdigit(currentPiece))
+		if (isdigit(currentPiece))
 		{
 			//convert current int into the ascii table
 			currentPosition += (int)currentPiece - 48;
 		}
-		if(isalpha(currentPiece))
+		if (isalpha(currentPiece))
 		{
 			currentPosition += 1;
 			short type;
 
 			short color = 1;
 
-			if(isupper(currentPiece))
+			if (isupper(currentPiece))
 			{
 				color = 0;
 				currentPiece = tolower(currentPiece);
@@ -314,7 +319,7 @@ void Board::setBoard(std::string fen)
 	//concat length of string + space
 	std::string enPassant = fen.substr(0, fen.find(' '));
 	this->enPassant = 0;
-	if(enPassant.size() == 2)
+	if (enPassant.size() == 2)
 	{
 		const char* enPassantChar = enPassant.c_str();
 		this->enPassant = (bitboard)1 << positionToIndex(enPassantChar);
@@ -340,16 +345,16 @@ std::string Board::getFen()
 	int counter = 0;
 	int index = 0;
 
-	for(uint8_t row = 8; row > 0; row--)
+	for (uint8_t row = 8; row > 0; row--)
 	{
-		for(uint8_t col = 0; col < 8; col++)
+		for (uint8_t col = 0; col < 8; col++)
 		{
 			index = row * 8 + col - 8;
 			Piece piece = getPieceAt(index);
 
-			if(!(piece.color == -1 || piece.type == -1))
+			if (!(piece.color == -1 || piece.type == -1))
 			{
-				if(counter > 0)
+				if (counter > 0)
 				{
 					//add empty spaces to fen
 					result += intToString(counter);
@@ -361,12 +366,12 @@ std::string Board::getFen()
 			else
 				counter++;
 		}
-		if(counter > 0)
+		if (counter > 0)
 		{
 			result += intToString(counter);
 			counter = 0;
 		}
-		if(row != 1)
+		if (row != 1)
 		{
 			result += "/";
 		}
@@ -381,7 +386,7 @@ std::string Board::getFen()
 	castle += (castleBQueenSide == true) ? "q" : "";
 	result += " " + castle;
 
-	result += " " + '-';
+	result += " -";
 	result += " " + intToString(halfmoveClock);
 	result += " " + intToString(FullmoveNumber);
 
@@ -392,7 +397,7 @@ std::string Board::intToString(int& i)
 {
 	std::stringstream ss;
 	ss << i;
-	
+
 	return ss.str();
 }
 
@@ -400,10 +405,10 @@ void Board::printBitboard()
 {
 	char result[64];
 
-	for(int index = 0; index < 64; index++)
+	for (int index = 0; index < 64; index++)
 	{
 		Piece piece = getPieceAt(index);
-		if(piece.color >= 0)
+		if (piece.color >= 0)
 		{
 			result[index] = (piece.color == 0) ? toupper(kPieceChars[piece.type]) : kPieceChars[piece.type];
 			continue;
@@ -412,18 +417,18 @@ void Board::printBitboard()
 	}
 
 	std::cout << "\n|  A  B  C  D  E  F  G  H  |\n|8";
-	for(short row = 7; row >= 0; --row)
+	for (short row = 7; row >= 0; --row)
 	{
-		for(short col = 0; col < 8; ++col)
+		for (short col = 0; col < 8; ++col)
 		{
 			int index = row * 8 + col;
 			std::cout << ' ' << result[index] << ' ';
-			if((index + 1) % 8 == 0 && index + 1 != 8)
+			if ((index + 1) % 8 == 0 && index + 1 != 8)
 			{
 				std::cout << row + 1 << "|\n"
-									<< "|" << row;
+					<< "|" << row;
 			}
-			else if(index + 1 != 8)
+			else if (index + 1 != 8)
 				std::cout << "";
 		}
 	}

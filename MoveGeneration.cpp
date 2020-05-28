@@ -6,12 +6,6 @@ inline int8_t absDiff(int a, int b)
 	return a < b ? b - a : a - b;
 }
 
-inline int getBitIndex(bitboard board)
-{
-	unsigned long pieceIndex;
-	_BitScanForward64(&pieceIndex, board);
-	return pieceIndex;
-}
 
 MoveGeneration::MoveGeneration(Board* board)
 {
@@ -25,8 +19,9 @@ std::vector<Move> MoveGeneration::getAllMoves()
 
 	while (allPieces)
 	{
-		unsigned long pieceIndex;
-		_BitScanForward64(&pieceIndex, allPieces);
+		unsigned long pieceIndexResult;
+		_BitScanForward64(&pieceIndexResult, allPieces);
+		short pieceIndex = pieceIndexResult;
 
 		// Remove piece from allPieces
 		bitboard originMask = (bitboard)1 << pieceIndex;
@@ -62,9 +57,9 @@ std::vector<Move> MoveGeneration::getAllMoves()
 
 		while (moves)
 		{
-			unsigned long destination;
-			_BitScanForward64(&destination, moves);
-
+			unsigned long destinationIndex;
+			_BitScanForward64(&destinationIndex, moves);
+			short destination = destinationIndex;
 			// Remove piece from allPieces
 			moves &= ~((bitboard)1 << destination);
 
@@ -135,6 +130,13 @@ std::vector<Move> MoveGeneration::getAllMoves()
 	}
 
 	return legalMoves;
+}
+
+int MoveGeneration::getBitIndex(bitboard board)
+{
+	unsigned long pieceIndex;
+	_BitScanForward64(&pieceIndex, board);
+	return pieceIndex;
 }
 
 bitboard MoveGeneration::getPawnMoves(int position)
@@ -466,7 +468,7 @@ int MoveGeneration::perft(int depth)
 		auto result = perft(depth - 1);
 		nodes += result;
 
-		// Undo last move & delete checked board		
+		// Undo last move & delete checked board
 		Board* original = board->origin;
 		delete board;
 		board = original;
