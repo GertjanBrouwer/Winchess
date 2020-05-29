@@ -9,6 +9,7 @@ struct Move
 	short startPosition;
 	short targetPosition;
 	short promotionPieceType = 0;
+	short score;
 };
 
 typedef uint64_t bitboard;

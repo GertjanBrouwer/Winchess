@@ -1,23 +1,55 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="Board.cpp" />
-    <ClCompile Include="Evaluation.cpp" />
-    <ClCompile Include="UCI.cpp" />
-    <ClCompile Include="MoveGeneration.cpp" />
     <ClCompile Include="Winchess.cpp" />
-    <ClCompile Include="Search.cpp" />
-    <ClCompile Include="Converter.cpp" />
+    <ClCompile Include="UCI.cpp">
+      <Filter>CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Search.cpp">
+      <Filter>CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="MoveGeneration.cpp">
+      <Filter>CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Evaluation.cpp">
+      <Filter>CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Converter.cpp">
+      <Filter>CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Board.cpp">
+      <Filter>CPP</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Search.h" />
-    <ClInclude Include="Board.h" />
-    <ClInclude Include="Evaluation.h" />
-    <ClInclude Include="MoveGeneration.h" />
-    <ClInclude Include="UCI.h" />
-    <ClInclude Include="Converter.h" />
+    <ClInclude Include="Converter.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Board.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Evaluation.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="MoveGeneration.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Search.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="UCI.h">
+      <Filter>Header</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header">
+      <UniqueIdentifier>{3b2df10e-8416-4fc0-88f9-2bdcb45c229e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CPP">
+      <UniqueIdentifier>{336dc74d-ff73-4479-97f2-2333c4fc7b77}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

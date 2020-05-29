@@ -63,10 +63,10 @@ int main()
 	board->doMove({54, 0});
 	auto foundMoves = generation->getAllMoves();
 	//TestDepth1(board, generation);
+	
+	Evaluation* eval;
 
-	Evaluation* eval = new Evaluation(board);
-
-	std::cout << eval->getBoardValue() << std::endl;
+	std::cout << eval->getBoardValue(board) << std::endl;
 
   //TestDepth1(board, generation);
 

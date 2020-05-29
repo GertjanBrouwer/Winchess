@@ -1,11 +1,10 @@
 ﻿#include "MoveGeneration.h"
-
+#include <algorithm>
 // Function to calculate the absolute difference
 inline int8_t absDiff(int a, int b)
 {
 	return a < b ? b - a : a - b;
 }
-
 
 MoveGeneration::MoveGeneration(Board* board)
 {
@@ -17,11 +16,13 @@ std::vector<Move> MoveGeneration::getAllMoves()
 	std::vector<Move> legalMoves;
 	bitboard allPieces = board->getAllPieces();
 
-	while (allPieces)
+	while(allPieces)
 	{
 		unsigned long pieceIndexResult;
 		_BitScanForward64(&pieceIndexResult, allPieces);
 		short pieceIndex = pieceIndexResult;
+		// List for all legal moves, used to assign move values
+		std::vector<Move> tempMoveList;
 
 		// Remove piece from allPieces
 		bitboard originMask = (bitboard)1 << pieceIndex;
@@ -29,33 +30,33 @@ std::vector<Move> MoveGeneration::getAllMoves()
 
 		Piece piece = board->getPieceAt(pieceIndex);
 
-		if (piece.color != board->turn)
+		if(piece.color != board->turn)
 			continue;
 		bitboard moves = 0;
 		bitboard enPassant = 0;
-		if (piece.type == Pawn)
+		if(piece.type == Pawn)
 		{
 			moves = getPawnMoves(pieceIndex);
 			// Store enPassant moves separately because the captured piece is determined differently than other 'normal' captures
 			enPassant = getEnPassant(pieceIndex);
 			moves |= enPassant;
 		}
-		if (piece.type == Knight)
+		if(piece.type == Knight)
 			moves = getKnightMoves(pieceIndex);
-		if (piece.type == Bishop)
+		if(piece.type == Bishop)
 			moves = getBishopMoves(pieceIndex);
-		if (piece.type == Rook)
+		if(piece.type == Rook)
 			moves = getRookMoves(pieceIndex);
-		if (piece.type == Queen)
+		if(piece.type == Queen)
 			moves = getQueenMoves(pieceIndex);
-		if (piece.type == King)
+		if(piece.type == King)
 		{
 			moves = getKingMoves(pieceIndex) | getCastlingMoves(pieceIndex);
 		}
-		if (moves == 0)
+		if(moves == 0)
 			continue;
 
-		while (moves)
+		while(moves)
 		{
 			unsigned long destinationIndex;
 			_BitScanForward64(&destinationIndex, moves);
@@ -65,7 +66,7 @@ std::vector<Move> MoveGeneration::getAllMoves()
 
 			bitboard destinationMask = (bitboard)1 << destination;
 			// Check if move result is not colliding with your own pieces
-			if (destinationMask & ~board->getOccupied(board->turn))
+			if(destinationMask & ~board->getOccupied(board->turn))
 			{
 				// Do move
 				board->pieces[board->turn][piece.type] &= ~((bitboard)1 << pieceIndex);
@@ -76,15 +77,15 @@ std::vector<Move> MoveGeneration::getAllMoves()
 				bitboard pawnPieceRemoved = board->pieces[!board->turn][Pawn] & destinationMask;
 
 				// Remove pawn captured by enPassant moves
-				if (enPassant & destinationMask)
+				if(enPassant & destinationMask)
 				{
 					pawnPieceRemoved |= (destinationMask << 8 | destinationMask >> 8) & kCenterRanks;
 				}
 
 				board->pieces[!board->turn][Pawn] &= ~pawnPieceRemoved;
 
-				bitboard knighPieceRemoved = board->pieces[!board->turn][Knight] & destinationMask;
-				board->pieces[!board->turn][Knight] &= ~knighPieceRemoved;
+				bitboard knightPieceRemoved = board->pieces[!board->turn][Knight] & destinationMask;
+				board->pieces[!board->turn][Knight] &= ~knightPieceRemoved;
 
 				bitboard bishopPieceRemoved = board->pieces[!board->turn][Bishop] & destinationMask;
 				board->pieces[!board->turn][Bishop] &= ~bishopPieceRemoved;
@@ -99,10 +100,11 @@ std::vector<Move> MoveGeneration::getAllMoves()
 				int kingPosition = getBitIndex(b);
 				board->updateBitboardCache();
 
-				if (!isInCheck(kingPosition))
+				if(!isInCheck(kingPosition))
 				{
+
 					// Promotions
-					if (piece.type == Pawn && kOuterRank & destinationMask)
+					if(piece.type == Pawn && kOuterRank & destinationMask)
 					{
 						legalMoves.push_back({pieceIndex, destination, Queen});
 						legalMoves.push_back({pieceIndex, destination, Rook});
@@ -111,7 +113,20 @@ std::vector<Move> MoveGeneration::getAllMoves()
 					}
 					else
 					{
-						legalMoves.push_back({pieceIndex, destination});
+						short score = 0;
+						if(pawnPieceRemoved != 0)
+							score = 100;
+						else if(knightPieceRemoved != 0 || bishopPieceRemoved != 0)
+							score = 200;
+						else if(rookPieceRemoved != 0)
+							score = 300;
+						else if(queenPieceRemoved != 0)
+							score = 400;
+
+						score += scoreType.find(piece.type)->second;
+						tempMoveList.push_back({pieceIndex, destination, 0, score});
+
+						//legalMoves.push_back({pieceIndex, destination});
 					}
 				}
 
@@ -120,17 +135,28 @@ std::vector<Move> MoveGeneration::getAllMoves()
 				board->pieces[board->turn][piece.type] |= (bitboard)1 << pieceIndex;
 
 				board->pieces[!board->turn][Pawn] |= pawnPieceRemoved;
-				board->pieces[!board->turn][Knight] |= knighPieceRemoved;
+				board->pieces[!board->turn][Knight] |= knightPieceRemoved;
 				board->pieces[!board->turn][Bishop] |= bishopPieceRemoved;
 				board->pieces[!board->turn][Rook] |= rookPieceRemoved;
 				board->pieces[!board->turn][Queen] |= queenPieceRemoved;
 				board->updateBitboardCache();
 			}
 		}
+		
+		//sort the moves based on score
+		std::sort(tempMoveList.begin(), tempMoveList.end(), [](const Move& lhs, const Move& rhs) {
+			return lhs.score < rhs.score;
+		});
+		
+		for(unsigned int index = 0; index < tempMoveList.size(); ++index)
+		{
+			legalMoves.push_back(tempMoveList[index]);
+		}
 	}
 
 	return legalMoves;
 }
+
 
 int MoveGeneration::getBitIndex(bitboard board)
 {
@@ -146,15 +172,15 @@ bitboard MoveGeneration::getPawnMoves(int position)
 	bitboard unoccupied = ~this->board->getAllPieces();
 
 	// Standard move
-	if (board->turn == White)
+	if(board->turn == White)
 		foundMoves |= unoccupied & piecePosition << 8;
 	else
 		foundMoves |= unoccupied & piecePosition >> 8;
 
 	// Double move
-	if (piecePosition & kStartPawn & kPieceColor[board->turn])
+	if(piecePosition & kStartPawn & kPieceColor[board->turn])
 	{
-		if (board->turn == White)
+		if(board->turn == White)
 			foundMoves |= unoccupied & foundMoves << 8;
 		else
 			foundMoves |= unoccupied & foundMoves >> 8;
@@ -172,7 +198,7 @@ bitboard MoveGeneration::getPawnCaptures(int position)
 	bitboard foundMoves = 0;
 
 	// Captures move
-	if (board->turn == White)
+	if(board->turn == White)
 	{
 		foundMoves |= piecePosition << 7 & enemyOccupied & kNotHFile;
 		foundMoves |= piecePosition << 9 & enemyOccupied & kNotAFile;
@@ -375,17 +401,17 @@ bool MoveGeneration::isInCheck(int position)
 	int8_t opponentColor = !board->turn;
 
 	// Pretend the king is a piece and see if it can capture an identical piece of the opposite color
-	if (getPawnCaptures(position) & board->pieces[opponentColor][Pawn])
+	if(getPawnCaptures(position) & board->pieces[opponentColor][Pawn])
 		return true;
-	if (getKnightMoves(position) & board->pieces[opponentColor][Knight])
+	if(getKnightMoves(position) & board->pieces[opponentColor][Knight])
 		return true;
-	if (getRookMoves(position) & board->pieces[opponentColor][Rook])
+	if(getRookMoves(position) & board->pieces[opponentColor][Rook])
 		return true;
-	if (getBishopMoves(position) & board->pieces[opponentColor][Bishop])
+	if(getBishopMoves(position) & board->pieces[opponentColor][Bishop])
 		return true;
-	if (getQueenMoves(position) & board->pieces[opponentColor][Queen])
+	if(getQueenMoves(position) & board->pieces[opponentColor][Queen])
 		return true;
-	if (getKingMoves(position) & board->pieces[opponentColor][King])
+	if(getKingMoves(position) & board->pieces[opponentColor][King])
 		return true;
 	return false;
 }
@@ -394,7 +420,7 @@ bitboard MoveGeneration::getEnPassant(int position)
 {
 	bitboard possibleEnPassantCapture = board->enPassant;
 	bitboard piecePosition = ((bitboard)1 << position) & kCenterRanks;
-	if (!piecePosition)
+	if(!piecePosition)
 		return 0;
 
 	// Captures move
@@ -415,37 +441,37 @@ bitboard MoveGeneration::getCastlingMoves(int position)
 	bitboard moves = 0;
 
 	// White king castling
-	if (position == 4)
+	if(position == 4)
 	{
 		// Make sure that there are no blocking pieces to the queenside
-		if (board->castleWQueenSide && !(board->getAllPieces() & 14)) //0000 1110‬
+		if(board->castleWQueenSide && !(board->getAllPieces() & 14)) //0000 1110‬
 		{
-			if (!isInCheck(2) && !isInCheck(3) && !isInCheck(4))
+			if(!isInCheck(2) && !isInCheck(3) && !isInCheck(4))
 				moves |= 4; // 0000 0100
 		}
 
 		// Make sure that there are no blocking pieces to the kingside
-		if (board->castleWKingSide && !(board->getAllPieces() & 96)) //0110 0000‬
+		if(board->castleWKingSide && !(board->getAllPieces() & 96)) //0110 0000‬
 		{
-			if (!isInCheck(4) && !isInCheck(5) && !isInCheck(6))
+			if(!isInCheck(4) && !isInCheck(5) && !isInCheck(6))
 				moves |= 64; // 0100 0000
 		}
 	}
 
-		// Black king castling
-	else if (position == 60)
+	// Black king castling
+	else if(position == 60)
 	{
 		// Make sure that there are no blocking pieces to the queenside
-		if (board->castleBQueenSide && !(board->getAllPieces() & 1008806316530991104)) //0000 1110‬
+		if(board->castleBQueenSide && !(board->getAllPieces() & 1008806316530991104)) //0000 1110‬
 		{
-			if (!isInCheck(58) && !isInCheck(59) && !isInCheck(60))
+			if(!isInCheck(58) && !isInCheck(59) && !isInCheck(60))
 				moves |= 288230376151711744; // 0000 0100
 		}
 
 		// Make sure that there are no blocking pieces to the kingside
-		if (board->castleBKingSide && !(board->getAllPieces() & 6917529027641081856)) //0110 0000 ‬
+		if(board->castleBKingSide && !(board->getAllPieces() & 6917529027641081856)) //0110 0000 ‬
 		{
-			if (!isInCheck(60) && !isInCheck(61) && !isInCheck(62))
+			if(!isInCheck(60) && !isInCheck(61) && !isInCheck(62))
 				moves |= 4611686018427387904; // 0100 0000
 		}
 	}
@@ -456,12 +482,12 @@ bitboard MoveGeneration::getCastlingMoves(int position)
 int MoveGeneration::perft(int depth)
 {
 	int nodes = 0;
-	if (depth == 0)
+	if(depth == 0)
 		return 1;
 
 	std::vector<Move> move_list = getAllMoves();
 
-	for (int i = 0; i < move_list.size(); i++)
+	for(int i = 0; i < move_list.size(); i++)
 	{
 		board = board->getBoardWithMove(move_list[i]);
 
