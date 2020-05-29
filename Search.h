@@ -2,6 +2,7 @@
 #include <iostream>
 #include "Board.h"
 #include "MoveGeneration.h"
+#include <atomic>
 
 struct CalculatedMove
 {
@@ -10,11 +11,11 @@ struct CalculatedMove
 	int nodes;
 };
 
-
 class Search
 {
-
 public:
+	static std::atomic<bool> ai_thread_running;
+
 	// Function to call alpha-beta to find the best move for the computer
 	static Move findBestMove(Board* bBoard, int depth, PieceColor computerColor);
 

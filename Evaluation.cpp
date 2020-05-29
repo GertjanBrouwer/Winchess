@@ -26,6 +26,16 @@ int Evaluation::GetPieceBasedEvaluation(Board* board)
 	return total;
 }
 
+int Evaluation::GetPieceBasedEvaluationOfColor(Board* board)
+{
+	int total = 0;
+
+	for(int type = 0; type < 5; type++)
+		total += __popcnt64(board->pieces[board->turn][type]) * typeValue.find(type)->second;
+
+	return total;
+}
+
 std::string Evaluation::getBoardValue(Board* board)
 {
 	std::stringstream ss;

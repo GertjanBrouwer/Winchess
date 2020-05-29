@@ -1,11 +1,10 @@
 #include "Search.h"
 
 #include <ctime>
-
-
-
 #include "Converter.h"
 #include "Evaluation.h"
+
+std::atomic<bool> Search::ai_thread_running(false);
 
 Move Search::findBestMove(Board* board, int depth, PieceColor computerColor)
 {
@@ -16,6 +15,11 @@ Move Search::findBestMove(Board* board, int depth, PieceColor computerColor)
 
 	CalculatedMove bestMove = alphabeta(board, moveGenerator, depth - 1, alpha, beta, computerColor);
 	//std::cout << "info string Depth: " << depth << " | Best move: " << Converter::formatMove(bestMove.move) << " Leaf node value: " << bestMove.value << std::endl;
+
+	if(!ai_thread_running)
+	{
+		return {-1, -1};
+	}
 
 	auto time = float(clock() - begin_time) / CLOCKS_PER_SEC * 1000;
 	
@@ -29,8 +33,13 @@ Search::alphabeta(Board* board, MoveGeneration* moveGenerator, int depth, int al
 {
 	// Get all the legal moves for whoever is supposed to move
 	std::vector<Move> moves = moveGenerator->getAllMoves();
-	Move bestMove = {-1, -1};
 
+	if(!ai_thread_running)
+	{
+		return {-1, -1};
+	}
+
+	Move bestMove = {-1, -1};
 	// Stop search if there are no more legal moves
 	if (moves.size() == 0)
 	{
@@ -44,6 +53,7 @@ Search::alphabeta(Board* board, MoveGeneration* moveGenerator, int depth, int al
 
 		return {board_evaluation, bestMove, 1};
 	}
+
 	// Stop search if the search has reached the maximum depth
 	if (depth == 0)
 	{
