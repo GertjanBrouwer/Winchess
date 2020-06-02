@@ -11,7 +11,7 @@ jobs:
     runs-on: "ubuntu-latest"
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
         with:
           submodules: true
 
@@ -25,7 +25,6 @@ jobs:
 
       - name: build src
         uses: lukka/run-cmake@v2
-        id: runcmake
         with:
           cmakeGenerator: "Ninja"
           cmakeListsOrSettingsJson: "CMakeListsTxtBasic"
@@ -33,3 +32,46 @@ jobs:
           useVcpkgToolchainFile: true
           buildWithCMakeArgs: "-- -v"
           buildDirectory: "${{ runner.workspace }}/build/"
+
+      - name: Get short SHA
+        id: slug
+        run: echo "::set-output name=sha8::$(echo ${GITHUB_SHA} | cut -c1-8)"
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: winchess-build-${{ steps.slug.outputs.sha8 }}
+          path: ${{ runner.workspace }}/build/
+
+      - name: "Get master"
+        uses: actions/checkout@v2
+        if: github.event_name == 'pull_request'
+        with:
+          ref: master
+          path: "winchess-master"
+
+      - name: dir
+        if: github.event_name == 'pull_request'
+        run: find ${{ github.workspace  }}/winchess-master/
+
+      - name: Build master
+        uses: lukka/run-cmake@v2
+        if: github.event_name == 'pull_request'
+        with:
+          cmakeGenerator: "Ninja"
+          cmakeListsOrSettingsJson: "CMakeListsTxtBasic"
+          cmakeListsTxtPath: "${{ github.workspace }}/winchess-master/CMakeLists.txt"
+          useVcpkgToolchainFile: true
+          buildWithCMakeArgs: "-- -v"
+          buildDirectory: "${{ runner.workspace }}/master-build/"
+
+      - name: unpack-cutechess
+        run: tar xvzf ${{ github.workspace }}/tests/assets/cutechess-cli.tar.gz
+        if: github.event_name == 'pull_request'
+
+      - name: install-cutechess
+        run: echo "::add-path::/cutechess-cli"
+        if: github.event_name == 'pull_request'
+
+      - name: run-tests
+        run: ${{ runner.workspace }}/build/winchess_tests ${{ runner.workspace }}/build/winchess ${{ runner.workspace }}/master-build/winchess
+        if: github.event_name == 'pull_request'

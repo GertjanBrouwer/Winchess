@@ -1,13 +1,13 @@
 #include "UCI.h"
 
-#include <algorithm>
 #include <atomic>
 #include <iostream>
 #include <thread>
+<<<<<<< HEAD
+#include <algorithm>
+=======
 #include <cstring>
-#include <iostream>
-#include <fstream>
-#include <cmath>
+>>>>>>> Add builtin alternatives
 
 #include "Converter.h"
 #include "Evaluation.h"
@@ -32,11 +32,6 @@ void UCI::Read()
 		std::cin.getline(command, 2047);
 		std::cout << "-----------------" << std::endl;
 
-		std::ofstream log;
-		log.open("D:/Projects/school/Winchess/out/build/x64-Release/uci.txt", std::ios_base::app);
-		log << command << std::endl;
-		log.close();
-		
 		if (strstr(command, "setoption"))
 			inputSetOptions();
 		else if (strstr(command, "isready"))
@@ -65,7 +60,7 @@ void UCI::Read()
 
 void UCI::inputUCI()
 {
-	std::cout << "id name " + engineName << std::endl;
+	std::cout << "id name" + engineName << std::endl;
 	std::cout << "id author team Winchess" << std::endl;
 	//options go here
 	std::cout << "uciok" << std::endl;
@@ -153,10 +148,6 @@ void search(Board* board)
 		depth++;
 		std::cout << "info currmove " << Converter::formatMove(bestMove) << " currmovenumber " << depth - 1 << std::endl;
 	}
-	std::ofstream log;
-	log.open("D:/Projects/school/Winchess/out/build/x64-Release/uci.txt", std::ios_base::app);
-	log << "bestmove " << Converter::formatMove(bestMove) << std::endl;
-	log.close();
 	std::cout << "bestmove " << Converter::formatMove(bestMove) << std::endl;
 }
 

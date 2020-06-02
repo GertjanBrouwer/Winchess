@@ -5,8 +5,6 @@
 #endif
 #include <sstream>
 
-int Evaluation::GetPieceBasedEvaluation(Board* board)
-{
 inline int countBits(bitboard board)
 {
 #if _WIN32
@@ -15,6 +13,10 @@ inline int countBits(bitboard board)
 	return __builtin_popcount(board);
 #endif
 }
+
+
+int Evaluation::GetPieceBasedEvaluation(Board* board)
+{
 
 	int total = 0;
 	unsigned int whiteTotal = 0;
