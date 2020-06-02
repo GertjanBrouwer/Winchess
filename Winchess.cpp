@@ -69,7 +69,6 @@ int main()
 	//	depth++;
 	//}
 
-
 	uci->Read();
 }
 

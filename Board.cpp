@@ -3,11 +3,6 @@
 #include <map>
 #include <sstream>
 
-int Board::promotions = 0;
-int Board::enpassants = 0;
-int Board::castles = 0;
-int Board::captures = 0;
-
 Board::Board()
 {
 	for (int color = 0; color < 2; color++)
@@ -75,12 +70,6 @@ void Board::doMove(Move move)
 	bitboard toMask = (bitboard)1 << to;
 
 	// Captures
-	for (int i = 0; i < 6; ++i)
-	{
-		if (pieces[White][i] & toMask || pieces[Black][i] & toMask)
-			captures++;
-	}
-
 	pieces[White][Pawn] &= ~toMask;
 	pieces[White][Knight] &= ~toMask;
 	pieces[White][Bishop] &= ~toMask;
@@ -98,7 +87,6 @@ void Board::doMove(Move move)
 	// Castling
 	if (piece.type == King && abs(from - to) == 2)
 	{
-		castles++;
 		bitboard colorBitboard = piece.color == White ? kStartAllWhite : kStartAllBlack;
 
 		if (from - to < 0)
@@ -157,27 +145,20 @@ void Board::doMove(Move move)
 	}
 
 	// En passant
-
-	int diagMove = (to - from) % 2;
-	if (piece.type == Pawn && (diagMove == 1 || diagMove == -1) && (getOccupied(1 - piece.color) & toMask) == 0)
-	{
-		enpassants++;
+	int diagonalMove = (to - from) % 2;
+	if(piece.type == Pawn && (diagonalMove == 1 || diagonalMove == -1) && (getOccupied(1 - piece.color) & toMask) == 0)
 		if (piece.color == White)
 			pieces[Black][Pawn] -= toMask >> 8;
 		else
 			pieces[White][Pawn] -= toMask << 8;
-	}
 
 	enPassant = 0;
 	if (piece.type == Pawn && abs(to - from) == 16)
-	{
 		enPassant = (bitboard)1 << ((to + from) / 2);
-	}
 
 	// Promotions
 	if (move.promotionPieceType != 0)
 	{
-		promotions++;
 		pieces[piece.color][move.promotionPieceType] |= toMask;
 		pieces[piece.color][piece.type] = pieces[piece.color][piece.type] - fromMask;
 	}
@@ -397,7 +378,7 @@ std::string Board::intToString(int& i)
 {
 	std::stringstream ss;
 	ss << i;
-
+	
 	return ss.str();
 }
 

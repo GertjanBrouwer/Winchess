@@ -91,12 +91,6 @@ public:
 	std::string intToString(int& i);
 	int FullmoveNumber;
 
-
-	static int captures;
-	static int castles;
-	static int enpassants;
-	static int promotions;
-
 private:
 	void clearBoard();
 	int halfmoveClock;

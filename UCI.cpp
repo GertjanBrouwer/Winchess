@@ -15,36 +15,38 @@ UCI::UCI(Board* bitboard)
 	board = bitboard;
 };
 
-UCI::~UCI(){};
+UCI::~UCI()
+{
+};
 
 void UCI::Read()
 {
 	std::cout << "Give command" << std::endl;
-	while(true)
+	while (true)
 	{
 		//read incomming line and save in char array command
-		std::cin.getline(command, 2048);
+		std::cin.getline(command, 2047);
 		std::cout << "-----------------" << std::endl;
 
-		if(strstr(command, "setoption"))
+		if (strstr(command, "setoption"))
 			inputSetOptions();
-		else if(strstr(command, "isready"))
+		else if (strstr(command, "isready"))
 			inputIsReady();
-		else if(strstr(command, "ucinewgame"))
+		else if (strstr(command, "ucinewgame"))
 			inputUCINewGame();
-		else if(strstr(command, "position"))
+		else if (strstr(command, "position"))
 			inputPosition();
-		else if(strstr(command, "go"))
+		else if (strstr(command, "go"))
 			inputGo();
-		else if(strstr(command, "stop"))
+		else if (strstr(command, "stop"))
 			inputStop();
-		else if(strstr(command, "print"))
+		else if (strstr(command, "print"))
 			inputPrint();
-		else if(strstr(command, "uci"))
+		else if (strstr(command, "uci"))
 			inputUCI();
-		else if(strstr(command, "getfen"))
+		else if (strstr(command, "getfen"))
 			getFen();
-		else if(strstr(command, "quit"))
+		else if (strstr(command, "quit"))
 			inputQuit();
 		else
 			std::cout << "non valid command '" << command << "'" << std::endl;
@@ -84,7 +86,7 @@ void UCI::inputPosition()
 	//remove posistion_ from input
 	cmd = cmd.erase(0, 9);
 
-	if(cmd.find("startpos") != std::string::npos)
+	if (cmd.find("startpos") != std::string::npos)
 	{
 		//remove startpos_ from input
 		cmd = cmd.erase(0, 9);
@@ -103,12 +105,12 @@ void UCI::inputPosition()
 		board->setBoard(fen);
 		cmd = cmd.erase(0, cmd.substr(0, cmd.find(" moves")).length());
 	}
-	if(cmd.find("moves") != std::string::npos)
+	if (cmd.find("moves") != std::string::npos)
 	{
 		//remove moves_ from input
 		cmd = cmd.erase(0, cmd.find("moves") + 6);
 
-		while(cmd.length() > 0)
+		while (cmd.length() > 0)
 		{
 			int moveLength = cmd.find(' ');
 			if(moveLength < 0)

@@ -49,9 +49,8 @@ std::vector<Move> MoveGeneration::getAllMoves()
 		if (piece.type == Queen)
 			moves = getQueenMoves(pieceIndex);
 		if (piece.type == King)
-		{
 			moves = getKingMoves(pieceIndex) | getCastlingMoves(pieceIndex);
-		}
+		
 		if (moves == 0)
 			continue;
 
@@ -456,13 +455,12 @@ bitboard MoveGeneration::getCastlingMoves(int position)
 int MoveGeneration::perft(int depth)
 {
 	int nodes = 0;
-
 	if (depth == 0)
 		return 1;
 
 	std::vector<Move> move_list = getAllMoves();
 
-	for (int i = 0; i < move_list.size(); i++)
+	for (int i = 0; i < move_list.size(); ++i)
 	{
 		board = board->getBoardWithMove(move_list[i]);
 

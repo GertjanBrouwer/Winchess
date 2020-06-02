@@ -34,9 +34,7 @@ int Evaluation::GetPieceBasedEvaluationOfColor(Board* board, PieceColor color)
 
 std::string Evaluation::getBoardValue(Board* board)
 {
-	std::stringstream ss;
 	int value = GetPieceBasedEvaluation(board);
 	std::string color = (value > 0) ? "White " : (value == 0) ? "Even board " : "Black ";
-	ss << value;
-	return color + ss.str();
+	return color + std::to_string(value);
 }
