@@ -38,9 +38,7 @@ Search::alphabeta(Board* board, MoveGeneration* moveGenerator, int depth, int al
 	std::vector<Move> moves = moveGenerator->getAllMoves();
 
 	if(!ai_thread_running)
-	{
 		return {-1, -1};
-	}
 
 	Move bestMove = {-1, -1};
 	// Stop search if there are no more legal moves
@@ -57,19 +55,6 @@ Search::alphabeta(Board* board, MoveGeneration* moveGenerator, int depth, int al
 		return {board_evaluation, bestMove, 1};
 	}
 
-	// Stop search if there are no more legal moves
-	if (moves.size() == 0)
-	{
-		bitboard b = board->pieces[board->turn][King];
-		int kingPosition = MoveGeneration::getBitIndex(b);
-
-		double board_evaluation = 0;
-
-		if (moveGenerator->isInCheck(kingPosition))
-			board_evaluation = board->turn == White ? -100 : 100;
-
-		return {board_evaluation, bestMove, 1};
-	}
 	// Stop search if the search has reached the maximum depth
 	if (depth == 0)
 	{
@@ -99,8 +84,8 @@ Search::alphabeta(Board* board, MoveGeneration* moveGenerator, int depth, int al
 		// Maximize the value if it is the computer's turn to move
 		if (board->turn == White)
 		{
-      // Update the best board value and alpha, the best position the computer is guaranteed of
-      if (moveIndex == 0 || calculated_move.value > best_calculated_move.value)
+			// Update the best board value and alpha, the best position the computer is guaranteed of
+			if (moveIndex == 0 || calculated_move.value > best_calculated_move.value)
 				best_calculated_move = calculated_move;
 			else if(calculated_move.value == best_calculated_move.value && rand() % 500 == 0)
 				best_calculated_move = calculated_move;
@@ -120,9 +105,7 @@ Search::alphabeta(Board* board, MoveGeneration* moveGenerator, int depth, int al
 		}
 		// Stop if the move is worse than all the previous moves
 		if (beta <= alpha)
-		{
 			break;
-		}
 	}
 	best_calculated_move.nodes = nodes;
 	return best_calculated_move;
