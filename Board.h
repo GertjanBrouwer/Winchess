@@ -89,7 +89,7 @@ public:
 	void updateBitboardCache();
 	bitboard getOccupied(uint8_t color);
 	std::string intToString(int& i);
-	int FullmoveNumber;
+	int fullmoveNumber;
 
 private:
 	void clearBoard();

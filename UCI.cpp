@@ -138,6 +138,7 @@ void search(Board* board)
 		Move foundMove = Search::findBestMove(board, depth, Black);
 		if(foundMove.startPosition == -1)
 		{
+			// Ignore found move if smaller than 0
 			break;
 		}
 
@@ -162,6 +163,7 @@ std::string getTime(std::string command, std::string part)
 
 int calculateEvalTime(Board* board)
 {
+	// Heuristics from http://http://facta.junis.ni.ac.rs/acar/acar200901/acar2009-07.pdf
 	int materialScore = Evaluation::GetPieceBasedEvaluationOfColor(board, board->turn);
 	if(materialScore < 20)
 		return materialScore + 10;
@@ -171,44 +173,49 @@ int calculateEvalTime(Board* board)
 		return round((3 / 8 * float(materialScore))) - 30;
 }
 
-void timeClock(int time, int inc, Board* board)
+void timeClock(int timeLeft, int increment, Board* board)
 { 
 	const clock_t begin_time = clock();
-	int searchTime = std::min((int)((time / Evaluation::GetPieceBasedEvaluationOfColor(board, board->turn) + inc) * 0.9), time - 100);
+	int searchTime = std::min((int)((timeLeft / Evaluation::GetPieceBasedEvaluationOfColor(board, board->turn) + increment) * 0.9),
+							 timeLeft - 100);
 
-	while(time != clock() - begin_time)
+	while(timeLeft != clock() - begin_time)
 	{
 		if(searchTime <= clock() - begin_time)
 		{
+			// Exit the search thread and return best move found
 			Search::ai_thread_running.exchange(false);
 			return;
 		}
 	}
+
+	// Ensure that the thread exits
+	Search::ai_thread_running.exchange(false);
 }
 
 void UCI::inputGo()
 {
 	std::string cmd = command;
-	int t;
-	int inc;
+	int timeLeft;
+	int increment;
 	if(board->turn == White)
 	{
-		t = std::stoi(getTime(cmd, "wtime"));
-		inc = std::stoi(getTime(cmd, "winc"));
+		timeLeft = std::stoi(getTime(cmd, "wtime"));
+		increment = std::stoi(getTime(cmd, "winc"));
 	}
 	else
 	{
-		t = std::stoi(getTime(cmd, "btime"));
-		inc = std::stoi(getTime(cmd, "binc"));
+		timeLeft = std::stoi(getTime(cmd, "btime"));
+		increment = std::stoi(getTime(cmd, "binc"));
 	}
 
-	std::thread thread1 = std::thread(search, board);
-	thread1.detach();
+	std::thread ai_thread = std::thread(search, board);
+	ai_thread.detach();
 
-	if(t > 0)
+	if(timeLeft > 0)
 	{
-		std::thread thread2 = std::thread(timeClock, t, inc, board);
-		thread2.detach();
+		std::thread timer_thread = std::thread(timeClock, timeLeft, increment, board);
+		timer_thread.detach();
 	}
 };
 

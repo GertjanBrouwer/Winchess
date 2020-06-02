@@ -17,9 +17,8 @@ public:
 
 	// Function to call alpha-beta to find the best move for the computer
 	static Move findBestMove(Board* bBoard, int depth, PieceColor computerColor);
-
-	// Function that uses the recursive alpha-beta algorithm to return the value of an updated bitboard
 private:
+	// Function that uses the recursive alpha-beta algorithm to return the value of an updated bitboard
 	static CalculatedMove alphabeta(Board* board, MoveGeneration* moveGenerator, int depth, int alpha, int beta,
 	                         PieceColor computerColor);
 };
