@@ -137,10 +137,8 @@ void search(Board* board)
 
 		Move foundMove = Search::findBestMove(board, depth, Black);
 		if(foundMove.startPosition == -1)
-		{
 			// Ignore found move if smaller than 0
 			break;
-		}
 
 		bestMove = foundMove;
 		depth++;
