@@ -2,6 +2,7 @@
 #include <iostream>
 #include <map>
 #include <sstream>
+#include <cstring>
 
 Board::Board()
 {
@@ -50,7 +51,7 @@ void Board::moveByChar(const char* moveChar)
 	short startPosition = positionToIndex(moveChar);
 	short targetPosition = positionToIndex(&moveChar[2]);
 	short promotionType = 0;
-	if (strlen(moveChar) == 5)
+	if (std::strlen(moveChar) == 5)
 		promotionType = types.at(moveChar[4]);
 
 	doMove({startPosition, targetPosition, promotionType});
@@ -307,16 +308,20 @@ void Board::setBoard(std::string fen)
 		fen = fen.erase(0, enPassant.length() + 1);
 	}
 
-	//save number of halfmoves in attribute
-	//concat number + space
-	std::string hmc = fen.substr(0, fen.find(' '));
-	halfmoveClock = std::atoi(hmc.c_str());
-	fen = fen.erase(0, hmc.length() + 1);
 
-	//save number of fullmoves in attribute
-	//concat number
-	FullmoveNumber = std::atoi(fen.c_str());
+	if(fen.length() > 1)
+	{
 
+		//save number of halfmoves in attribute
+		//concat number + space
+		std::string hmc = fen.substr(0, fen.find(' '));
+		halfmoveClock = std::atoi(hmc.c_str());
+		fen = fen.erase(0, hmc.length() + 1);
+
+		//save number of fullmoves in attribute
+		//concat number
+		fullmoveNumber = std::atoi(fen.c_str());
+	}
 	updateBitboardCache();
 }
 
@@ -369,7 +374,7 @@ std::string Board::getFen()
 
 	result += " -";
 	result += " " + intToString(halfmoveClock);
-	result += " " + intToString(FullmoveNumber);
+	result += " " + intToString(fullmoveNumber);
 
 	return result;
 }

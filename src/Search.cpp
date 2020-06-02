@@ -1,6 +1,7 @@
 #include "Search.h"
 
 #include <ctime>
+#include <fstream>
 #include "Converter.h"
 #include "Evaluation.h"
 
@@ -10,7 +11,7 @@ Move Search::findBestMove(Board* board, int depth, PieceColor computerColor)
 {
 	clock_t begin_time = clock();
 	// Get all the moves available for the computer
-	int alpha = INT_MIN, beta = INT_MAX;
+	int alpha = -2000000000, beta = 2000000000;
 	MoveGeneration* moveGenerator = new MoveGeneration(board);
 
 	// depth - 1 : Because the leaf nodes are on depth is 0 instead of 1
@@ -26,6 +27,13 @@ Move Search::findBestMove(Board* board, int depth, PieceColor computerColor)
 	std::cout << "info score cp " << bestMove.value * 100 << " depth " << depth  << " nodes  " << bestMove.nodes << " time " << time << " pv " << Converter::formatMove(bestMove.move)
 						<< std::endl;
 
+	
+	std::ofstream log;
+	log.open("D:/Projects/school/Winchess/out/build/x64-Release/uci.txt", std::ios_base::app);
+	log << "info score cp " << bestMove.value * 100 << " depth " << depth << " nodes  " << bestMove.nodes << " time "
+															 << time << " pv " << Converter::formatMove(bestMove.move) << std::endl;
+	log.close();
+	
 	delete moveGenerator;
   
 	return bestMove.move;

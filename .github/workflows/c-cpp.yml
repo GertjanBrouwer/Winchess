@@ -2,53 +2,76 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
-  job:
-    name: ${{ matrix.os }}-hosted-basic
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        include:
-          - os: windows-latest
-            triplet: x64-windows
-            vcpkgCommitId: '0591528cbfde14ccfd3900c3fb19aba382c05349'
-            vcpkgPackages: 'sqlite3'
-          - os: ubuntu-latest
-            triplet: x64-linux
-            vcpkgCommitId: '0591528cbfde14ccfd3900c3fb19aba382c05349'
-            vcpkgPackages: 'sqlite3'
-          - os: macos-latest
-            triplet: x64-osx
-            vcpkgCommitId: '0591528cbfde14ccfd3900c3fb19aba382c05349'
-            vcpkgPackages: 'sqlite3'
+  build-ubuntu:
+    runs-on: "ubuntu-latest"
 
     steps:
-    - uses: actions/checkout@v1
-      with:
-        submodules: true
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
 
-    - uses: lukka/get-cmake@latest
-    - name: dir
-      run: find ${{ runner.workspace }}
-      if: "!contains( matrix.os, 'windows')"
-    - name: dir
-      run: gci -recurse ${{ runner.workspace }}
-      if: contains( matrix.os, 'windows')
-    - name: get-cmake
-      uses: lukka/get-cmake@v3.17.2
-    - name: Run CMake+Ninja without triplet
-      uses: lukka/run-cmake@v2
-      id: runcmake
-      with:
-        cmakeGenerator: 'Ninja'  
-        cmakeListsOrSettingsJson: 'CMakeListsTxtBasic'
-        cmakeListsTxtPath: '${{ github.workspace }}/cmakeliststxt/CMakeLists.txt'
-        useVcpkgToolchainFile: true
-        buildWithCMakeArgs: '-- -v'
-        buildDirectory: '${{ runner.workspace }}/b/ninja/'
+      - uses: lukka/get-cmake@latest
+
+      - name: dir
+        run: find ${{ runner.workspace }}
+
+      - name: get-cmake
+        uses: lukka/get-cmake@v3.17.2
+
+      - name: build src
+        uses: lukka/run-cmake@v2
+        with:
+          cmakeGenerator: "Ninja"
+          cmakeListsOrSettingsJson: "CMakeListsTxtBasic"
+          cmakeListsTxtPath: "${{ github.workspace }}/CMakeLists.txt"
+          useVcpkgToolchainFile: true
+          buildWithCMakeArgs: "-- -v"
+          buildDirectory: "${{ runner.workspace }}/build/"
+
+      - name: Get short SHA
+        id: slug
+        run: echo "::set-output name=sha8::$(echo ${GITHUB_SHA} | cut -c1-8)"
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: winchess-build-${{ steps.slug.outputs.sha8 }}
+          path: ${{ runner.workspace }}/build/
+
+      - name: "Get master"
+        uses: actions/checkout@v2
+        if: github.event_name == 'pull_request'
+        with:
+          ref: master
+          path: "winchess-master"
+
+      - name: dir
+        if: github.event_name == 'pull_request'
+        run: find ${{ github.workspace  }}/winchess-master/
+
+      - name: Build master
+        uses: lukka/run-cmake@v2
+        if: github.event_name == 'pull_request'
+        with:
+          cmakeGenerator: "Ninja"
+          cmakeListsOrSettingsJson: "CMakeListsTxtBasic"
+          cmakeListsTxtPath: "${{ github.workspace }}/winchess-master/CMakeLists.txt"
+          useVcpkgToolchainFile: true
+          buildWithCMakeArgs: "-- -v"
+          buildDirectory: "${{ runner.workspace }}/master-build/"
+
+      - name: unpack-cutechess
+        run: tar xvzf ${{ github.workspace }}/tests/assets/cutechess-cli.tar.gz
+        if: github.event_name == 'pull_request'
+
+      - name: install-cutechess
+        run: echo "::add-path::/cutechess-cli"
+        if: github.event_name == 'pull_request'
+
+      - name: run-tests
+        run: ${{ runner.workspace }}/build/winchess_tests ${{ runner.workspace }}/build/winchess ${{ runner.workspace }}/master-build/winchess
+        if: github.event_name == 'pull_request'

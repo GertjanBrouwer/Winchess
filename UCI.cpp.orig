@@ -3,7 +3,11 @@
 #include <atomic>
 #include <iostream>
 #include <thread>
+<<<<<<< HEAD
 #include <algorithm>
+=======
+#include <cstring>
+>>>>>>> Add builtin alternatives
 
 #include "Converter.h"
 #include "Evaluation.h"

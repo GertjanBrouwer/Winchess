@@ -6,6 +6,20 @@ inline int8_t absDiff(int a, int b)
 	return a < b ? b - a : a - b;
 }
 
+inline short bitIndex(bitboard board)
+{
+#if __GNUC__
+	return __builtin_ffs(board);
+#elif __INTEL_COMPILER
+	return _bit_scan_forward(board);
+#elif _WIN32
+	unsigned long pieceIndex;
+	_BitScanForward64(&pieceIndex, board);
+	return pieceIndex;
+#else
+	return ffsl(board);
+#endif
+}
 
 MoveGeneration::MoveGeneration(Board* board)
 {
@@ -17,11 +31,10 @@ std::vector<Move> MoveGeneration::getAllMoves()
 	std::vector<Move> legalMoves;
 	bitboard allPieces = board->getAllPieces();
 
+	
 	while (allPieces)
 	{
-		unsigned long pieceIndexResult;
-		_BitScanForward64(&pieceIndexResult, allPieces);
-		short pieceIndex = pieceIndexResult;
+		short pieceIndex = bitIndex(allPieces);
 
 		// Remove piece from allPieces
 		bitboard originMask = (bitboard)1 << pieceIndex;
@@ -56,9 +69,7 @@ std::vector<Move> MoveGeneration::getAllMoves()
 
 		while (moves)
 		{
-			unsigned long destinationIndex;
-			_BitScanForward64(&destinationIndex, moves);
-			short destination = destinationIndex;
+			short destination = bitIndex(moves);
 			// Remove piece from allPieces
 			moves &= ~((bitboard)1 << destination);
 
@@ -131,11 +142,9 @@ std::vector<Move> MoveGeneration::getAllMoves()
 	return legalMoves;
 }
 
-int MoveGeneration::getBitIndex(bitboard board)
+inline int MoveGeneration::getBitIndex(bitboard board)
 {
-	unsigned long pieceIndex;
-	_BitScanForward64(&pieceIndex, board);
-	return pieceIndex;
+	return bitIndex(board);
 }
 
 bitboard MoveGeneration::getPawnMoves(int position)
@@ -459,7 +468,7 @@ int MoveGeneration::perft(int depth)
 		return 1;
 
 	std::vector<Move> move_list = getAllMoves();
-
+	
 	for (int i = 0; i < move_list.size(); ++i)
 	{
 		board = board->getBoardWithMove(move_list[i]);
