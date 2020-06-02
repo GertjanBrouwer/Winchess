@@ -12,6 +12,5 @@ std::string Converter::formatPosition(short position)
 
 std::string Converter::formatMove(Move move)
 {
-	auto p2 = formatPosition(move.startPosition);
 	return formatPosition(move.startPosition) + formatPosition(move.targetPosition);
 }
