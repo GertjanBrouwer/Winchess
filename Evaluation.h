@@ -14,6 +14,6 @@ class Evaluation
 {
 public:
 	static int GetPieceBasedEvaluation(Board* board);
-	static int GetPieceBasedEvaluationOfColor(Board* board);
+	static int GetPieceBasedEvaluationOfColor(Board* board, PieceColor color);
 	static std::string getBoardValue(Board* board);
 };

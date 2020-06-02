@@ -124,8 +124,6 @@ void UCI::inputPosition()
 	std::cout << "info string " << board->getFen() << std::endl;
 };
 
-std::atomic<Move> globalBestMove{{}};
-
 void search(Board* board)
 {
 	Search::ai_thread_running.exchange(true);
@@ -143,7 +141,6 @@ void search(Board* board)
 
 		bestMove = foundMove;
 		depth++;
-		globalBestMove.exchange(bestMove);
 		std::cout << "info currmove " << Converter::formatMove(bestMove) << " currmovenumber " << depth - 1 << std::endl;
 	}
 	std::cout << "bestmove " << Converter::formatMove(bestMove) << std::endl;
@@ -163,7 +160,7 @@ std::string getTime(std::string command, std::string part)
 
 int calculateEvalTime(Board* board)
 {
-	int materialScore = Evaluation::GetPieceBasedEvaluationOfColor(board);
+	int materialScore = Evaluation::GetPieceBasedEvaluationOfColor(board, board->turn);
 	if(materialScore < 20)
 		return materialScore + 10;
 	else if(20 <= materialScore && materialScore <= 60)
@@ -175,7 +172,7 @@ int calculateEvalTime(Board* board)
 void timeClock(int time, int inc, Board* board)
 { 
 	const clock_t begin_time = clock();
-	int searchTime = std::min((int)((time / Evaluation::GetPieceBasedEvaluationOfColor(board) + inc) * 0.9), time - 100);
+	int searchTime = std::min((int)((time / Evaluation::GetPieceBasedEvaluationOfColor(board, board->turn) + inc) * 0.9), time - 100);
 
 	while(time != clock() - begin_time)
 	{
