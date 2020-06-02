@@ -125,7 +125,7 @@ void UCI::inputPosition()
 };
 
 std::atomic<bool> ai_thread_running{false};
-std::atomic<Move> globalBestMove{{}};
+//std::atomic<Move> globalBestMove{{}};
 std::thread ai_thread;
 
 void search(Board* board)
@@ -139,7 +139,7 @@ void search(Board* board)
 
 		bestMove = Search::findBestMove(board, depth, Black);
 		depth++;
-		globalBestMove.exchange(bestMove);
+		//globalBestMove.exchange(bestMove);
 		std::cout << "info currmove " << Converter::formatMove(bestMove) << " currmovenumber " << depth - 1 << std::
 			endl;
 	}
@@ -156,7 +156,7 @@ void UCI::inputGo()
 
 void UCI::inputStop()
 {
-	std::cout << "bestmove " << Converter::formatMove(globalBestMove) << std::endl;
+	//std::cout << "bestmove " << Converter::formatMove(globalBestMove) << std::endl;
 }
 
 void UCI::inputQuit()

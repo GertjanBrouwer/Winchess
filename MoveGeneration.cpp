@@ -117,16 +117,14 @@ std::vector<Move> MoveGeneration::getAllMoves()
 						if(pawnPieceRemoved != 0)
 							score = 100;
 						else if(knightPieceRemoved != 0 || bishopPieceRemoved != 0)
-							score = 200;
-						else if(rookPieceRemoved != 0)
 							score = 300;
+						else if(rookPieceRemoved != 0)
+							score = 500;
 						else if(queenPieceRemoved != 0)
-							score = 400;
+							score = 900;
 
 						score += scoreType.find(piece.type)->second;
 						tempMoveList.push_back({pieceIndex, destination, 0, score});
-
-						//legalMoves.push_back({pieceIndex, destination});
 					}
 				}
 
