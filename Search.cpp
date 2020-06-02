@@ -1,11 +1,10 @@
 #include "Search.h"
 
 #include <ctime>
-
-
-
 #include "Converter.h"
 #include "Evaluation.h"
+
+std::atomic<bool> Search::ai_thread_running(false);
 
 Move Search::findBestMove(Board* board, int depth, PieceColor computerColor)
 {
@@ -17,12 +16,18 @@ Move Search::findBestMove(Board* board, int depth, PieceColor computerColor)
 	// depth - 1 : Because the leaf nodes are on depth is 0 instead of 1
 	CalculatedMove bestMove = alphabeta(board, moveGenerator, depth - 1, alpha, beta, computerColor);
 
+	if(!ai_thread_running)
+	{
+		return {-1, -1};
+	}
+
 	auto time = float(clock() - begin_time) / CLOCKS_PER_SEC * 1000;
 	
 	std::cout << "info score cp " << bestMove.value * 100 << " depth " << depth  << " nodes  " << bestMove.nodes << " time " << time << " pv " << Converter::formatMove(bestMove.move)
 						<< std::endl;
 
 	delete moveGenerator;
+  
 	return bestMove.move;
 }
 
@@ -31,8 +36,11 @@ Search::alphabeta(Board* board, MoveGeneration* moveGenerator, int depth, int al
 {
 	// Get all the legal moves for whoever is supposed to move
 	std::vector<Move> moves = moveGenerator->getAllMoves();
-	Move bestMove = {-1, -1};
 
+	if(!ai_thread_running)
+		return {-1, -1};
+
+	Move bestMove = {-1, -1};
 	// Stop search if there are no more legal moves
 	if (moves.size() == 0)
 	{
@@ -46,6 +54,7 @@ Search::alphabeta(Board* board, MoveGeneration* moveGenerator, int depth, int al
 
 		return {board_evaluation, bestMove, 1};
 	}
+
 	// Stop search if the search has reached the maximum depth
 	if (depth == 0)
 	{
@@ -77,7 +86,6 @@ Search::alphabeta(Board* board, MoveGeneration* moveGenerator, int depth, int al
 		{
 			// Update the best board value and alpha, the best position the computer is guaranteed of
 			if (moveIndex == 0 || calculated_move.value > best_calculated_move.value)
-
 				best_calculated_move = calculated_move;
 			else if(calculated_move.value == best_calculated_move.value && rand() % 500 == 0)
 				best_calculated_move = calculated_move;
@@ -91,16 +99,13 @@ Search::alphabeta(Board* board, MoveGeneration* moveGenerator, int depth, int al
 			if (moveIndex == 0 || calculated_move.value < best_calculated_move.value)
 				best_calculated_move = calculated_move;
 			else if(calculated_move.value == best_calculated_move.value && rand() % 500 == 0)
-
 				best_calculated_move = calculated_move;
 			if (best_calculated_move.value < beta)
 				beta = best_calculated_move.value;
 		}
 		// Stop if the move is worse than all the previous moves
 		if (beta <= alpha)
-		{
 			break;
-		}
 	}
 	best_calculated_move.nodes = nodes;
 	return best_calculated_move;

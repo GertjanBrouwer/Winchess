@@ -8,19 +8,27 @@ int Evaluation::GetPieceBasedEvaluation(Board* board)
 	unsigned int whiteTotal = 0;
 	unsigned int blackTotal = 0;
 
-	for (int type = 0; type < 5; type++)
-	{
-		//count total bits in board white
-		whiteTotal += __popcnt64(board->pieces[White][type]) * typeValue.find(type)->second;
-		//count total bits in board black
-		blackTotal += __popcnt64(board->pieces[Black][type]) * typeValue.find(type)->second;
-	}
+	whiteTotal = GetPieceBasedEvaluationOfColor(board, White);
+	blackTotal = GetPieceBasedEvaluationOfColor(board, Black);
 
 	//evaluate count and determine
 	total += whiteTotal;
 	total -= blackTotal;
 	
 	//return count
+	return total;
+}
+
+int Evaluation::GetPieceBasedEvaluationOfColor(Board* board, PieceColor color)
+{
+	int total = 0;
+
+	total += __popcnt64(board->pieces[color][Pawn]) * typeValue.find(Pawn)->second;
+	total += __popcnt64(board->pieces[color][Knight]) * typeValue.find(Knight)->second;
+	total += __popcnt64(board->pieces[color][Bishop]) * typeValue.find(Bishop)->second;
+	total += __popcnt64(board->pieces[color][Rook]) * typeValue.find(Rook)->second;
+	total += __popcnt64(board->pieces[color][Queen]) * typeValue.find(Queen)->second;
+
 	return total;
 }
 

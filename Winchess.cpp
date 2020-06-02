@@ -54,7 +54,7 @@ int main()
 {
 	Board* board = new Board();
 
-	board->setBoard("rn1qkbnr/4pp1p/1p4p1/1N1pP3/p2P4/P4N2/1PQ2PPP/R1B1K2R b KQkq - 1 11 ");
+	board->setBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
 	MoveGeneration* generation = new MoveGeneration(board);
 

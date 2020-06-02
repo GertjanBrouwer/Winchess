@@ -3,8 +3,10 @@
 #include <atomic>
 #include <iostream>
 #include <thread>
+#include <algorithm>
 
 #include "Converter.h"
+#include "Evaluation.h"
 #include "Search.h"
 
 UCI::UCI(Board* bitboard)
@@ -111,7 +113,7 @@ void UCI::inputPosition()
 		while (cmd.length() > 0)
 		{
 			int moveLength = cmd.find(' ');
-			if (moveLength < 0)
+			if(moveLength < 0)
 				moveLength = cmd.length();
 			std::cout << cmd.substr(0, moveLength) << std::endl;
 
@@ -124,40 +126,100 @@ void UCI::inputPosition()
 	std::cout << "info string " << board->getFen() << std::endl;
 };
 
-std::atomic<bool> ai_thread_running{false};
-std::atomic<Move> globalBestMove{{}};
-std::thread ai_thread;
-
 void search(Board* board)
 {
-	const clock_t begin_time = clock();
+	Search::ai_thread_running.exchange(true);
 	int depth = 2;
 	Move bestMove;
-	while (float(clock() - begin_time) / CLOCKS_PER_SEC < 2)
+	while(Search::ai_thread_running)
 	{
 		std::cout << "info depth " << depth << std::endl;
 
-		bestMove = Search::findBestMove(board, depth, Black);
+		Move foundMove = Search::findBestMove(board, depth, Black);
+		if(foundMove.startPosition == -1)
+			// Ignore found move if smaller than 0
+			break;
+
+		bestMove = foundMove;
 		depth++;
-		globalBestMove.exchange(bestMove);
-		std::cout << "info currmove " << Converter::formatMove(bestMove) << " currmovenumber " << depth - 1 << std::
-			endl;
+		std::cout << "info currmove " << Converter::formatMove(bestMove) << " currmovenumber " << depth - 1 << std::endl;
 	}
 	std::cout << "bestmove " << Converter::formatMove(bestMove) << std::endl;
 }
 
+std::string getTime(std::string command, std::string part)
+{
+	if(command.find(part) != std::string::npos)
+	{
+		auto test = part.length();
+		command.erase(0, command.find(part) + part.length() + 1);
+		return command.substr(0, command.find(' '));
+	}
+
+	return "0";
+}
+
+int calculateEvalTime(Board* board)
+{
+	// Heuristics from http://http://facta.junis.ni.ac.rs/acar/acar200901/acar2009-07.pdf
+	int materialScore = Evaluation::GetPieceBasedEvaluationOfColor(board, board->turn);
+	if(materialScore < 20)
+		return materialScore + 10;
+	else if(20 <= materialScore && materialScore <= 60)
+		return round((3 / 8 * float(materialScore))) + 22;
+	else
+		return round((3 / 8 * float(materialScore))) - 30;
+}
+
+void timeClock(int timeLeft, int increment, Board* board)
+{ 
+	const clock_t begin_time = clock();
+	int searchTime = std::min((int)((timeLeft / Evaluation::GetPieceBasedEvaluationOfColor(board, board->turn) + increment) * 0.9),
+							 timeLeft - 100);
+
+	while(timeLeft != clock() - begin_time)
+	{
+		if(searchTime <= clock() - begin_time)
+		{
+			// Exit the search thread and return best move found
+			Search::ai_thread_running.exchange(false);
+			return;
+		}
+	}
+
+	// Ensure that the thread exits
+	Search::ai_thread_running.exchange(false);
+}
+
 void UCI::inputGo()
 {
-	// @TODO Make sure current ai thread isn't running before starting
-	ai_thread_running.exchange(false);
-	ai_thread_running.exchange(true);
-	auto thread = std::thread(search, board);
-	thread.detach();
+	std::string cmd = command;
+	int timeLeft;
+	int increment;
+	if(board->turn == White)
+	{
+		timeLeft = std::stoi(getTime(cmd, "wtime"));
+		increment = std::stoi(getTime(cmd, "winc"));
+	}
+	else
+	{
+		timeLeft = std::stoi(getTime(cmd, "btime"));
+		increment = std::stoi(getTime(cmd, "binc"));
+	}
+
+	std::thread ai_thread = std::thread(search, board);
+	ai_thread.detach();
+
+	if(timeLeft > 0)
+	{
+		std::thread timer_thread = std::thread(timeClock, timeLeft, increment, board);
+		timer_thread.detach();
+	}
 };
 
 void UCI::inputStop()
 {
-	std::cout << "bestmove " << Converter::formatMove(globalBestMove) << std::endl;
+	Search::ai_thread_running.exchange(false);
 }
 
 void UCI::inputQuit()

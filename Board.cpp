@@ -145,7 +145,6 @@ void Board::doMove(Move move)
 	}
 
 	// En passant
-
 	int diagonalMove = (to - from) % 2;
 	if(piece.type == Pawn && (diagonalMove == 1 || diagonalMove == -1) && (getOccupied(1 - piece.color) & toMask) == 0)
 		if (piece.color == White)
