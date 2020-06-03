@@ -46,8 +46,10 @@ std::vector<Move> MoveGeneration::getAllMoves()
 
 		if(piece.color != board->turn)
 			continue;
+
 		bitboard moves = 0;
 		bitboard enPassant = 0;
+
 		if (piece.type == Pawn)
 		{
 			moves = getPawnMoves(pieceIndex);
@@ -125,15 +127,16 @@ std::vector<Move> MoveGeneration::getAllMoves()
 					{
 						short score = 0;
 						if(pawnPieceRemoved != 0)
-							score = 100;
+							score = 1;
 						else if(knightPieceRemoved != 0 || bishopPieceRemoved != 0)
-							score = 300;
+							score = 3;
 						else if(rookPieceRemoved != 0)
-							score = 500;
+							score = 5;
 						else if(queenPieceRemoved != 0)
-							score = 900;
+							score = 9;
 
-						score += scoreType.find(piece.type)->second;
+						//add current piece value to the score, subtract the piece value from 10 to reverse the values
+						score += (10 - scoreType.find(piece.type)->second);
 						tempMoveList.push_back({pieceIndex, destination, 0, score});
 					}
 				}
