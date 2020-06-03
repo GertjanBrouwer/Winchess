@@ -31,11 +31,6 @@ void UCI::Read()
 		//read incomming line and save in char array command
 		std::cin.getline(command, 2047);
 		std::cout << "-----------------" << std::endl;
-
-		std::ofstream log;
-		log.open("D:/Projects/school/Winchess/out/build/x64-Release/uci.txt", std::ios_base::app);
-		log << command << std::endl;
-		log.close();
 		
 		if (strstr(command, "setoption"))
 			inputSetOptions();
@@ -153,10 +148,7 @@ void search(Board* board)
 		depth++;
 		std::cout << "info currmove " << Converter::formatMove(bestMove) << " currmovenumber " << depth - 1 << std::endl;
 	}
-	std::ofstream log;
-	log.open("D:/Projects/school/Winchess/out/build/x64-Release/uci.txt", std::ios_base::app);
-	log << "bestmove " << Converter::formatMove(bestMove) << std::endl;
-	log.close();
+
 	std::cout << "bestmove " << Converter::formatMove(bestMove) << std::endl;
 }
 
@@ -178,10 +170,9 @@ int calculateEvalTime(Board* board)
 	int materialScore = Evaluation::GetPieceBasedEvaluationOfColor(board, board->turn);
 	if(materialScore < 20)
 		return materialScore + 10;
-	else if(20 <= materialScore && materialScore <= 60)
+	if(20 <= materialScore && materialScore <= 60)
 		return round((3 / 8 * float(materialScore))) + 22;
-	else
-		return round((3 / 8 * float(materialScore))) - 30;
+	return round((3 / 8 * float(materialScore))) - 30;
 }
 
 void timeClock(int timeLeft, int increment, Board* board)
