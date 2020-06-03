@@ -6,6 +6,21 @@ inline int8_t absDiff(int a, int b)
 	return a < b ? b - a : a - b;
 }
 
+inline short bitIndex(bitboard board)
+{
+#if __GNUC__
+	return __builtin_ffs(board);
+#elif __INTEL_COMPILER
+	return _bit_scan_forward(board);
+#elif _WIN32
+	unsigned long pieceIndex;
+	_BitScanForward64(&pieceIndex, board);
+	return pieceIndex;
+#else
+	return ffsl(board);
+#endif
+}
+
 MoveGeneration::MoveGeneration(Board* board)
 {
 	this->board = board;
@@ -16,11 +31,10 @@ std::vector<Move> MoveGeneration::getAllMoves()
 	std::vector<Move> legalMoves;
 	bitboard allPieces = board->getAllPieces();
 
-	while(allPieces)
+	
+	while (allPieces)
 	{
-		unsigned long pieceIndexResult;
-		_BitScanForward64(&pieceIndexResult, allPieces);
-		short pieceIndex = pieceIndexResult;
+		short pieceIndex = bitIndex(allPieces);
 		// List for all legal moves, used to assign move values
 		std::vector<Move> tempMoveList;
 
@@ -34,33 +48,30 @@ std::vector<Move> MoveGeneration::getAllMoves()
 			continue;
 		bitboard moves = 0;
 		bitboard enPassant = 0;
-		if(piece.type == Pawn)
+		if (piece.type == Pawn)
 		{
 			moves = getPawnMoves(pieceIndex);
 			// Store enPassant moves separately because the captured piece is determined differently than other 'normal' captures
 			enPassant = getEnPassant(pieceIndex);
 			moves |= enPassant;
 		}
-		if(piece.type == Knight)
+		if (piece.type == Knight)
 			moves = getKnightMoves(pieceIndex);
-		if(piece.type == Bishop)
+		if (piece.type == Bishop)
 			moves = getBishopMoves(pieceIndex);
-		if(piece.type == Rook)
+		if (piece.type == Rook)
 			moves = getRookMoves(pieceIndex);
-		if(piece.type == Queen)
+		if (piece.type == Queen)
 			moves = getQueenMoves(pieceIndex);
-		if(piece.type == King)
-		{
+		if (piece.type == King)
 			moves = getKingMoves(pieceIndex) | getCastlingMoves(pieceIndex);
-		}
-		if(moves == 0)
+		
+		if (moves == 0)
 			continue;
 
 		while(moves)
 		{
-			unsigned long destinationIndex;
-			_BitScanForward64(&destinationIndex, moves);
-			short destination = destinationIndex;
+			short destination = bitIndex(moves);
 			// Remove piece from allPieces
 			moves &= ~((bitboard)1 << destination);
 
@@ -77,7 +88,7 @@ std::vector<Move> MoveGeneration::getAllMoves()
 				bitboard pawnPieceRemoved = board->pieces[!board->turn][Pawn] & destinationMask;
 
 				// Remove pawn captured by enPassant moves
-				if(enPassant & destinationMask)
+				if (enPassant & destinationMask)
 				{
 					pawnPieceRemoved |= (destinationMask << 8 | destinationMask >> 8) & kCenterRanks;
 				}
@@ -100,11 +111,10 @@ std::vector<Move> MoveGeneration::getAllMoves()
 				int kingPosition = getBitIndex(b);
 				board->updateBitboardCache();
 
-				if(!isInCheck(kingPosition))
+				if (!isInCheck(kingPosition))
 				{
-
 					// Promotions
-					if(piece.type == Pawn && kOuterRank & destinationMask)
+					if (piece.type == Pawn && kOuterRank & destinationMask)
 					{
 						legalMoves.push_back({pieceIndex, destination, Queen});
 						legalMoves.push_back({pieceIndex, destination, Rook});
@@ -155,12 +165,9 @@ std::vector<Move> MoveGeneration::getAllMoves()
 	return legalMoves;
 }
 
-
-int MoveGeneration::getBitIndex(bitboard board)
+inline int MoveGeneration::getBitIndex(bitboard board)
 {
-	unsigned long pieceIndex;
-	_BitScanForward64(&pieceIndex, board);
-	return pieceIndex;
+	return bitIndex(board);
 }
 
 bitboard MoveGeneration::getPawnMoves(int position)
@@ -170,15 +177,15 @@ bitboard MoveGeneration::getPawnMoves(int position)
 	bitboard unoccupied = ~this->board->getAllPieces();
 
 	// Standard move
-	if(board->turn == White)
+	if (board->turn == White)
 		foundMoves |= unoccupied & piecePosition << 8;
 	else
 		foundMoves |= unoccupied & piecePosition >> 8;
 
 	// Double move
-	if(piecePosition & kStartPawn & kPieceColor[board->turn])
+	if (piecePosition & kStartPawn & kPieceColor[board->turn])
 	{
-		if(board->turn == White)
+		if (board->turn == White)
 			foundMoves |= unoccupied & foundMoves << 8;
 		else
 			foundMoves |= unoccupied & foundMoves >> 8;
@@ -196,7 +203,7 @@ bitboard MoveGeneration::getPawnCaptures(int position)
 	bitboard foundMoves = 0;
 
 	// Captures move
-	if(board->turn == White)
+	if (board->turn == White)
 	{
 		foundMoves |= piecePosition << 7 & enemyOccupied & kNotHFile;
 		foundMoves |= piecePosition << 9 & enemyOccupied & kNotAFile;
@@ -484,8 +491,8 @@ int MoveGeneration::perft(int depth)
 		return 1;
 
 	std::vector<Move> move_list = getAllMoves();
-
-	for(int i = 0; i < move_list.size(); i++)
+	
+	for (int i = 0; i < move_list.size(); ++i)
 	{
 		board = board->getBoardWithMove(move_list[i]);
 

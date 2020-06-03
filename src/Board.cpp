@@ -2,11 +2,7 @@
 #include <iostream>
 #include <map>
 #include <sstream>
-
-int Board::promotions = 0;
-int Board::enpassants = 0;
-int Board::castles = 0;
-int Board::captures = 0;
+#include <cstring>
 
 Board::Board()
 {
@@ -55,7 +51,7 @@ void Board::moveByChar(const char* moveChar)
 	short startPosition = positionToIndex(moveChar);
 	short targetPosition = positionToIndex(&moveChar[2]);
 	short promotionType = 0;
-	if (strlen(moveChar) == 5)
+	if (std::strlen(moveChar) == 5)
 		promotionType = types.at(moveChar[4]);
 
 	doMove({startPosition, targetPosition, promotionType});
@@ -75,12 +71,6 @@ void Board::doMove(Move move)
 	bitboard toMask = (bitboard)1 << to;
 
 	// Captures
-	for (int i = 0; i < 6; ++i)
-	{
-		if (pieces[White][i] & toMask || pieces[Black][i] & toMask)
-			captures++;
-	}
-
 	pieces[White][Pawn] &= ~toMask;
 	pieces[White][Knight] &= ~toMask;
 	pieces[White][Bishop] &= ~toMask;
@@ -98,7 +88,6 @@ void Board::doMove(Move move)
 	// Castling
 	if (piece.type == King && abs(from - to) == 2)
 	{
-		castles++;
 		bitboard colorBitboard = piece.color == White ? kStartAllWhite : kStartAllBlack;
 
 		if (from - to < 0)
@@ -159,25 +148,18 @@ void Board::doMove(Move move)
 	// En passant
 	int diagonalMove = (to - from) % 2;
 	if(piece.type == Pawn && (diagonalMove == 1 || diagonalMove == -1) && (getOccupied(1 - piece.color) & toMask) == 0)
-	{
-		captures++;
-		enpassants++;
 		if (piece.color == White)
 			pieces[Black][Pawn] -= toMask >> 8;
 		else
 			pieces[White][Pawn] -= toMask << 8;
-	}
 
 	enPassant = 0;
 	if (piece.type == Pawn && abs(to - from) == 16)
-	{
 		enPassant = (bitboard)1 << ((to + from) / 2);
-	}
 
 	// Promotions
 	if (move.promotionPieceType != 0)
 	{
-		promotions++;
 		pieces[piece.color][move.promotionPieceType] |= toMask;
 		pieces[piece.color][piece.type] = pieces[piece.color][piece.type] - fromMask;
 	}
@@ -326,16 +308,20 @@ void Board::setBoard(std::string fen)
 		fen = fen.erase(0, enPassant.length() + 1);
 	}
 
-	//save number of halfmoves in attribute
-	//concat number + space
-	std::string hmc = fen.substr(0, fen.find(' '));
-	halfmoveClock = std::atoi(hmc.c_str());
-	fen = fen.erase(0, hmc.length() + 1);
 
-	//save number of fullmoves in attribute
-	//concat number
-	FullmoveNumber = std::atoi(fen.c_str());
+	if(fen.length() > 1)
+	{
 
+		//save number of halfmoves in attribute
+		//concat number + space
+		std::string hmc = fen.substr(0, fen.find(' '));
+		halfmoveClock = std::atoi(hmc.c_str());
+		fen = fen.erase(0, hmc.length() + 1);
+
+		//save number of fullmoves in attribute
+		//concat number
+		fullmoveNumber = std::atoi(fen.c_str());
+	}
 	updateBitboardCache();
 }
 
@@ -388,7 +374,7 @@ std::string Board::getFen()
 
 	result += " -";
 	result += " " + intToString(halfmoveClock);
-	result += " " + intToString(FullmoveNumber);
+	result += " " + intToString(fullmoveNumber);
 
 	return result;
 }
