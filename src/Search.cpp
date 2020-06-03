@@ -26,13 +26,6 @@ Move Search::findBestMove(Board* board, int depth, PieceColor computerColor)
 	
 	std::cout << "info score cp " << bestMove.value * 100 << " depth " << depth  << " nodes  " << bestMove.nodes << " time " << time << " pv " << Converter::formatMove(bestMove.move)
 						<< std::endl;
-
-	
-	std::ofstream log;
-	log.open("D:/Projects/school/Winchess/out/build/x64-Release/uci.txt", std::ios_base::app);
-	log << "info score cp " << bestMove.value * 100 << " depth " << depth << " nodes  " << bestMove.nodes << " time "
-															 << time << " pv " << Converter::formatMove(bestMove.move) << std::endl;
-	log.close();
 	
 	delete moveGenerator;
   
