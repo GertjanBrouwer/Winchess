@@ -134,7 +134,10 @@ void search(Board* board)
 {
 	Search::ai_thread_running.exchange(true);
 	int depth = 2;
-	Move bestMove;
+
+	MoveGeneration* moveGenerator = new MoveGeneration(board);
+	Move bestMove = moveGenerator->getAllMoves()[0];
+	
 	while(Search::ai_thread_running)
 	{
 		std::cout << "info depth " << depth << std::endl;
@@ -148,6 +151,8 @@ void search(Board* board)
 		depth++;
 		std::cout << "info currmove " << Converter::formatMove(bestMove) << " currmovenumber " << depth - 1 << std::endl;
 	}
+
+	delete moveGenerator;
 
 	std::cout << "bestmove " << Converter::formatMove(bestMove) << std::endl;
 }
@@ -178,10 +183,10 @@ int calculateEvalTime(Board* board)
 void timeClock(int timeLeft, int increment, Board* board)
 { 
 	const clock_t begin_time = clock();
-	int searchTime = std::min((int)((timeLeft / Evaluation::GetPieceBasedEvaluationOfColor(board, board->turn) + increment) * 0.9),
+	int searchTime = std::min((int)((timeLeft / calculateEvalTime(board) + increment) * 0.9),
 							 timeLeft - 100);
 
-	while(timeLeft != clock() - begin_time)
+	while(true)
 	{
 		if(searchTime <= clock() - begin_time)
 		{
@@ -190,9 +195,6 @@ void timeClock(int timeLeft, int increment, Board* board)
 			return;
 		}
 	}
-
-	// Ensure that the thread exits
-	Search::ai_thread_running.exchange(false);
 }
 
 void UCI::inputGo()

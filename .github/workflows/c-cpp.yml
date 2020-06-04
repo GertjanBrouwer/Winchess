@@ -73,6 +73,7 @@ jobs:
         if: github.event_name == 'pull_request'
 
       - name: install cutechess dependencies
+        if: github.event_name == 'pull_request'
         run: |
           sudo apt install libqt5core5a
           sudo strip --remove-section=.note.ABI-tag ${{ runner.workspace }}/cutechess-cli/lib/libQt5Core.so.5
@@ -83,10 +84,11 @@ jobs:
         if: github.event_name == 'pull_request'
 
       - name: run-cutechess
-        run: cutechess-cli -engine cmd=${{ runner.workspace }}/build/winchess name=winchess -engine cmd=${{ runner.workspace }}/master-build/winchess name=winchessmaster -each proto=uci tc=40/2 -rounds 2 -recover -wait 1 -debug -pgnout ${{ runner.workspace }}/play-results.txt
+        run: cutechess-cli -engine cmd=${{ runner.workspace }}/build/winchess name=winchess -engine cmd=${{ runner.workspace }}/master-build/winchess name=winchessmaster -each proto=uci tc=40/5.2+0.0832 -concurrency 1 -rounds 20 -games 2 -draw movenumber=40 movecount=4 score=8 -resign movecount=4 score=500 -openings file=${{ github.workspace }}/tests/assets/silversuite.pgn -repeat -recover -wait 1 -pgnout ${{ runner.workspace }}/play-results.txt
         if: github.event_name == 'pull_request'
 
       - uses: actions/upload-artifact@v2
+        if: github.event_name == 'pull_request'
         with:
           name: play-results
           path: ${{ runner.workspace }}/play-results.txt
