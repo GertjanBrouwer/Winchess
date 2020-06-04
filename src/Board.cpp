@@ -6,9 +6,9 @@
 
 Board::Board()
 {
-	for (int color = 0; color < 2; color++)
+	for (int color = 0; color < 2; ++color)
 	{
-		for (int type = 0; type < 6; type++)
+		for (int type = 0; type < 6; ++type)
 		{
 			// kStartPiecePositions = bitboards of start position of all the pieces
 			// kPieceColor = bitboards of the chess piece colors
@@ -51,6 +51,7 @@ void Board::moveByChar(const char* moveChar)
 	short startPosition = positionToIndex(moveChar);
 	short targetPosition = positionToIndex(&moveChar[2]);
 	short promotionType = 0;
+	//check if move is a promotion, promotions are noted as e.q. e7e8Q 
 	if (std::strlen(moveChar) == 5)
 		promotionType = types.at(moveChar[4]);
 
@@ -383,7 +384,7 @@ std::string Board::intToString(int& i)
 {
 	std::stringstream ss;
 	ss << i;
-	
+
 	return ss.str();
 }
 
@@ -391,7 +392,7 @@ void Board::printBitboard()
 {
 	char result[64];
 
-	for (int index = 0; index < 64; index++)
+	for (int index = 0; index < 64; ++index)
 	{
 		Piece piece = getPieceAt(index);
 		if (piece.color >= 0)

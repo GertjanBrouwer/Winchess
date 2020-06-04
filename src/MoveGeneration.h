@@ -9,6 +9,8 @@ const bitboard kNotGHFile = 0b00111111001111110011111100111111001111110011111100
 
 const bitboard kOuterRank = 0b1111111100000000000000000000000000000000000000000000000011111111;
 
+const std::map<char, uint8_t> scoreType = {{Pawn, 1}, {Knight, 2}, {Bishop, 3}, {Rook, 4}, {Queen, 5}, {King, 6}};
+
 class MoveGeneration
 {
 private:
