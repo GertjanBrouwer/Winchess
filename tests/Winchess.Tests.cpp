@@ -8,6 +8,7 @@
 #include <array>
 
 #include "Perft.h"
+#include "../src/MoveGeneration.h"
 
 std::string exec(std::string cmd)
 {
@@ -33,11 +34,9 @@ int main(int argc, char** argv)
 {
 	std::cout << "=== [STARTED WINCHESS TESTS] ===" << std::endl;
 
+	bitboard board = (bitboard)1 << 8;
+
+	std::cout << "8 | " << MoveGeneration::getBitIndex(board);
+
 	Perft::Test();
-
-
-	const std::string engine1(argv[0]);
-	const std::string engine2(argv[1]);
-
-	exec("cutechess-cli -engine cmd=" + engine1 + " -engine cmd=" + engine2 + " -each proto=uci tc=40/2 -rounds 20");
 }

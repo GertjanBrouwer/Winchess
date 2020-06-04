@@ -9,7 +9,7 @@ inline int8_t absDiff(int a, int b)
 inline short bitIndex(bitboard board)
 {
 #if __GNUC__
-	return __builtin_ffs(board);
+	return __builtin_ctzll(board);
 #elif __INTEL_COMPILER
 	return _bit_scan_forward(board);
 #elif _WIN32
@@ -31,7 +31,6 @@ std::vector<Move> MoveGeneration::getAllMoves()
 	std::vector<Move> legalMoves;
 	bitboard allPieces = board->getAllPieces();
 
-	
 	while (allPieces)
 	{
 		short pieceIndex = bitIndex(allPieces);
@@ -41,7 +40,7 @@ std::vector<Move> MoveGeneration::getAllMoves()
 		// Remove piece from allPieces
 		bitboard originMask = (bitboard)1 << pieceIndex;
 		allPieces &= ~originMask;
-
+		
 		Piece piece = board->getPieceAt(pieceIndex);
 
 		if(piece.color != board->turn)

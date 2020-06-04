@@ -10,7 +10,7 @@ inline int countBits(bitboard board)
 #if _WIN32
 	return __popcnt64(board);
 #else
-	return __builtin_popcount(board);
+	return __builtin_popcountll(board);
 #endif
 }
 

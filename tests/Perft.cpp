@@ -4,8 +4,33 @@
 #include <iostream>
 #include <string>
 
+#ifdef _WIN32
+#	include <windows.h>
+#else
+#	include <limits.h>
+#	include <unistd.h>
+#	include <string>
+#endif
+
+
 #include "../src/Board.h"
 #include "../src/MoveGeneration.h"
+
+
+
+std::string getexepath()
+{
+	#ifdef _WIN32
+	char result[MAX_PATH];
+	auto executable = std::string(result, GetModuleFileName(NULL, result, MAX_PATH));
+	#else
+	char result[PATH_MAX];
+	ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+	auto executable = std::string(result, (count > 0) ? count : 0);
+	#endif
+
+	return executable.substr(0, executable.find_last_of("\\/"));
+}
 
 bool Perft::Test()
 {
@@ -17,7 +42,10 @@ bool Perft::Test()
 	std::string line;
 	std::ifstream myfile;
 
-	const char* testFile = "resources/perft-test.epd";
+	std::string file = getexepath() + "/resources/perft-test.epd";
+	const char* testFile = file.c_str();
+
+	std::cout << " - opened file: "<< testFile << std::endl;
 	std::cout << " - opening file" << std::endl;
 	myfile.open(testFile);
 	std::cout << " - opened file" << std::endl;

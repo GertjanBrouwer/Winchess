@@ -65,13 +65,30 @@ jobs:
           buildDirectory: "${{ runner.workspace }}/master-build/"
 
       - name: unpack-cutechess
-        run: tar xvzf ${{ github.workspace }}/tests/assets/cutechess-cli.tar.gz
+        run: tar xvzf ${{ github.workspace }}/tests/assets/cutechess-cli.tar.gz -C ${{ runner.workspace }}
         if: github.event_name == 'pull_request'
 
       - name: install-cutechess
-        run: echo "::add-path::/cutechess-cli"
+        run: echo "::add-path::${{ runner.workspace }}/cutechess-cli"
         if: github.event_name == 'pull_request'
+
+      - name: install cutechess dependencies
+        if: github.event_name == 'pull_request'
+        run: |
+          sudo apt install libqt5core5a
+          sudo strip --remove-section=.note.ABI-tag ${{ runner.workspace }}/cutechess-cli/lib/libQt5Core.so.5
+          cd ${{ runner.workspace }}/cutechess-cli/lib
 
       - name: run-tests
         run: ${{ runner.workspace }}/build/winchess_tests ${{ runner.workspace }}/build/winchess ${{ runner.workspace }}/master-build/winchess
         if: github.event_name == 'pull_request'
+
+      - name: run-cutechess
+        run: cutechess-cli -engine cmd=${{ runner.workspace }}/build/winchess name=winchess -engine cmd=${{ runner.workspace }}/master-build/winchess name=winchessmaster -each proto=uci tc=40/5.2+0.0832 -concurrency 1 -rounds 20 -games 2 -draw movenumber=40 movecount=4 score=8 -resign movecount=4 score=500 -openings file=${{ github.workspace }}/tests/assets/silversuite.pgn -repeat -recover -wait 1 -pgnout ${{ runner.workspace }}/play-results.txt
+        if: github.event_name == 'pull_request'
+
+      - uses: actions/upload-artifact@v2
+        if: github.event_name == 'pull_request'
+        with:
+          name: play-results
+          path: ${{ runner.workspace }}/play-results.txt
