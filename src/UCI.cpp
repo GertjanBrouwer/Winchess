@@ -8,6 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <chrono>
 
 #include "Converter.h"
 #include "Evaluation.h"
@@ -132,12 +133,12 @@ void UCI::inputPosition()
 
 void search(Board* board)
 {
-	Search::ai_thread_running.exchange(true);
 	int depth = 2;
 
 	MoveGeneration* moveGenerator = new MoveGeneration(board);
 	Move bestMove = moveGenerator->getAllMoves()[0];
-	
+	delete moveGenerator;
+
 	while(Search::ai_thread_running)
 	{
 		std::cout << "info depth " << depth << std::endl;
@@ -152,7 +153,6 @@ void search(Board* board)
 		std::cout << "info currmove " << Converter::formatMove(bestMove) << " currmovenumber " << depth - 1 << std::endl;
 	}
 
-	delete moveGenerator;
 
 	std::cout << "bestmove " << Converter::formatMove(bestMove) << std::endl;
 }
@@ -182,15 +182,19 @@ int calculateEvalTime(Board* board)
 
 void timeClock(int timeLeft, int increment, Board* board)
 { 
-	const clock_t begin_time = clock();
+	auto startTime = std::chrono::steady_clock::now();
 	int searchTime = std::min((int)((timeLeft / calculateEvalTime(board) + increment) * 0.9),
 							 timeLeft - 100);
 
+	std::cout << "info string give search time: " << searchTime << "ms" << std::endl;
 	while(true)
 	{
-		if(searchTime <= clock() - begin_time)
+		auto now = std::chrono::steady_clock::now();
+		int calculatedTime = std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count();
+		if(calculatedTime >= searchTime)
 		{
 			// Exit the search thread and return best move found
+			std::cout << "info string ai thread cancelled (calculatedTime: " << calculatedTime << ")" << std::endl;
 			Search::ai_thread_running.exchange(false);
 			return;
 		}
@@ -212,6 +216,9 @@ void UCI::inputGo()
 		timeLeft = std::stoi(getTime(cmd, "btime"));
 		increment = std::stoi(getTime(cmd, "binc"));
 	}
+
+	
+	Search::ai_thread_running.exchange(true);
 
 	std::thread ai_thread = std::thread(search, board);
 	ai_thread.detach();
