@@ -11,5 +11,5 @@ int main()
 {
 	Board* board = new Board();
 	UCI* uci = new UCI(board);
-	uci->Read();
+	uci->Start();
 }

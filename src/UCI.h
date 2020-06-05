@@ -7,7 +7,9 @@ public:
 	UCI(Board* bitboard);
 	~UCI();
 
-	void Read();
+	void Start();
+
+private:
 	void inputUCI();
 	void inputSetOptions();
 	void inputIsReady();
@@ -19,7 +21,6 @@ public:
 	void getFen();
 	void inputQuit();
 
-private:
 	std::string engineName;
 	Board* board;
 	char command[2048];

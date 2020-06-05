@@ -24,7 +24,7 @@ UCI::~UCI()
 {
 };
 
-void UCI::Read()
+void UCI::Start()
 {
 	std::cout << "Give command" << std::endl;
 	while (true)

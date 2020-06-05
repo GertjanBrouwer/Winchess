@@ -8,7 +8,7 @@
 
 std::atomic<bool> Search::ai_thread_running(false);
 
-Move Search::findBestMove(Board* board, int depth, PieceColor computerColor)
+Move Search::findBestMove(Board* board, int depthLimit, PieceColor computerColor)
 {
 	auto start = std::chrono::steady_clock::now();
 	// Get all the moves available for the computer
@@ -16,7 +16,7 @@ Move Search::findBestMove(Board* board, int depth, PieceColor computerColor)
 	MoveGeneration* moveGenerator = new MoveGeneration(board);
 
 	// depth - 1 : Because the leaf nodes are on depth is 0 instead of 1
-	CalculatedMove bestMove = alphabeta(board, moveGenerator, depth - 1, alpha, beta, computerColor);
+	CalculatedMove bestMove = alphabeta(board, moveGenerator, depthLimit - 1, alpha, beta, computerColor);
 
 	if(!ai_thread_running)
 	{
@@ -26,7 +26,8 @@ Move Search::findBestMove(Board* board, int depth, PieceColor computerColor)
 	auto now = std::chrono::steady_clock::now();
 	auto time = std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count();
 	
-	std::cout << "info score cp " << bestMove.value * 100 << " depth " << depth  << " nodes  " << bestMove.nodes << " time " << time << " pv " << Converter::formatMove(bestMove.move)
+	std::cout << "info score cp " << bestMove.value * 100 << " depth " << depthLimit << " nodes  " << bestMove.nodes
+						<< " time " << time << " pv " << Converter::formatMove(bestMove.move)
 						<< std::endl;
 	
 	delete moveGenerator;
