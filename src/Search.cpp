@@ -4,6 +4,7 @@
 #include <fstream>
 #include "Converter.h"
 #include "Evaluation.h"
+#include "TranspositionTable.h"
 
 std::atomic<bool> Search::ai_thread_running(false);
 
@@ -42,6 +43,18 @@ Move Search::findBestMove(Board* board, int depth, PieceColor computerColor)
 CalculatedMove
 Search::alphabeta(Board* board, MoveGeneration* moveGenerator, int depth, int alpha, int beta, PieceColor computerColor)
 {
+	uint64_t hash = TranspositionTable::globalInstance->hash(board);
+
+	TTEntry entry = TranspositionTable::globalInstance->probe(hash);
+
+
+	if(entry.depth != -1)
+	{
+		if(entry.depth >= depth)
+		{
+			return {entry.evaluation, entry.move, 1};
+		}
+	}
 	// Get all the legal moves for whoever is supposed to move
 	std::vector<Move> moves = moveGenerator->getAllMoves();
 
@@ -49,6 +62,7 @@ Search::alphabeta(Board* board, MoveGeneration* moveGenerator, int depth, int al
 		return {-1, -1};
 
 	Move bestMove = {-1, -1};
+
 	// Stop search if there are no more legal moves
 	if (moves.size() == 0)
 	{
@@ -115,6 +129,8 @@ Search::alphabeta(Board* board, MoveGeneration* moveGenerator, int depth, int al
 		if (beta <= alpha)
 			break;
 	}
+
+	TranspositionTable::globalInstance->save(hash, best_calculated_move.move, best_calculated_move.value, depth);
 	best_calculated_move.nodes = nodes;
 	return best_calculated_move;
 }

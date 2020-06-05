@@ -12,6 +12,7 @@
 #include "Converter.h"
 #include "Evaluation.h"
 #include "Search.h"
+#include "TranspositionTable.h"
 
 UCI::UCI(Board* bitboard)
 {
@@ -138,6 +139,7 @@ void UCI::inputPosition()
 void search(Board* board)
 {
 	Search::ai_thread_running.exchange(true);
+	TranspositionTable::globalInstance->clear();
 	int depth = 2;
 	Move bestMove;
 	while(Search::ai_thread_running)

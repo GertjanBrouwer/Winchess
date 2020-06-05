@@ -29,6 +29,7 @@ MoveGeneration::MoveGeneration(Board* board)
 std::vector<Move> MoveGeneration::getAllMoves()
 {
 	std::vector<Move> legalMoves;
+	legalMoves.reserve(40);
 	bitboard allPieces = board->getAllPieces();
 
 	

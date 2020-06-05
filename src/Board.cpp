@@ -6,6 +6,8 @@
 
 Board::Board()
 {
+	enPassant = 0;
+
 	for (int color = 0; color < 2; color++)
 	{
 		for (int type = 0; type < 6; type++)
