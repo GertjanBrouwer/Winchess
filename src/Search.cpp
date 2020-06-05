@@ -2,6 +2,7 @@
 
 #include <ctime>
 #include <fstream>
+#include <chrono>
 #include "Converter.h"
 #include "Evaluation.h"
 #include "TranspositionTable.h"
@@ -10,7 +11,7 @@ std::atomic<bool> Search::ai_thread_running(false);
 
 Move Search::findBestMove(Board* board, int depth, PieceColor computerColor)
 {
-	clock_t begin_time = clock();
+	auto start = std::chrono::steady_clock::now();
 	// Get all the moves available for the computer
 	int alpha = -2000000000, beta = 2000000000;
 	MoveGeneration* moveGenerator = new MoveGeneration(board);
@@ -23,17 +24,11 @@ Move Search::findBestMove(Board* board, int depth, PieceColor computerColor)
 		return {-1, -1};
 	}
 
-	auto time = float(clock() - begin_time) / CLOCKS_PER_SEC * 1000;
+	auto now = std::chrono::steady_clock::now();
+	auto time = std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count();
 	
 	std::cout << "info score cp " << bestMove.value * 100 << " depth " << depth  << " nodes  " << bestMove.nodes << " time " << time << " pv " << Converter::formatMove(bestMove.move)
 						<< std::endl;
-
-	
-	std::ofstream log;
-	log.open("D:/Projects/school/Winchess/out/build/x64-Release/uci.txt", std::ios_base::app);
-	log << "info score cp " << bestMove.value * 100 << " depth " << depth << " nodes  " << bestMove.nodes << " time "
-															 << time << " pv " << Converter::formatMove(bestMove.move) << std::endl;
-	log.close();
 	
 	delete moveGenerator;
   

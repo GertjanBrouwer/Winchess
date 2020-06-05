@@ -8,6 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <chrono>
 
 #include "Converter.h"
 #include "Evaluation.h"
@@ -32,11 +33,6 @@ void UCI::Read()
 		//read incomming line and save in char array command
 		std::cin.getline(command, 2047);
 		std::cout << "-----------------" << std::endl;
-
-		std::ofstream log;
-		log.open("D:/Projects/school/Winchess/out/build/x64-Release/uci.txt", std::ios_base::app);
-		log << command << std::endl;
-		log.close();
 		
 		if (strstr(command, "setoption"))
 			inputSetOptions();
@@ -140,8 +136,13 @@ void search(Board* board)
 {
 	Search::ai_thread_running.exchange(true);
 	TranspositionTable::globalInstance->clear();
+
 	int depth = 2;
-	Move bestMove;
+
+	MoveGeneration* moveGenerator = new MoveGeneration(board);
+	Move bestMove = moveGenerator->getAllMoves()[0];
+	delete moveGenerator;
+
 	while(Search::ai_thread_running)
 	{
 		std::cout << "info depth " << depth << std::endl;
@@ -155,10 +156,8 @@ void search(Board* board)
 		depth++;
 		std::cout << "info currmove " << Converter::formatMove(bestMove) << " currmovenumber " << depth - 1 << std::endl;
 	}
-	std::ofstream log;
-	log.open("D:/Projects/school/Winchess/out/build/x64-Release/uci.txt", std::ios_base::app);
-	log << "bestmove " << Converter::formatMove(bestMove) << std::endl;
-	log.close();
+
+
 	std::cout << "bestmove " << Converter::formatMove(bestMove) << std::endl;
 }
 
@@ -180,30 +179,30 @@ int calculateEvalTime(Board* board)
 	int materialScore = Evaluation::GetPieceBasedEvaluationOfColor(board, board->turn);
 	if(materialScore < 20)
 		return materialScore + 10;
-	else if(20 <= materialScore && materialScore <= 60)
+	if(20 <= materialScore && materialScore <= 60)
 		return round((3 / 8 * float(materialScore))) + 22;
-	else
-		return round((3 / 8 * float(materialScore))) - 30;
+	return round((3 / 8 * float(materialScore))) - 30;
 }
 
 void timeClock(int timeLeft, int increment, Board* board)
 { 
-	const clock_t begin_time = clock();
-	int searchTime = std::min((int)((timeLeft / Evaluation::GetPieceBasedEvaluationOfColor(board, board->turn) + increment) * 0.9),
+	auto startTime = std::chrono::steady_clock::now();
+	int searchTime = std::min((int)((timeLeft / calculateEvalTime(board) + increment) * 0.9),
 							 timeLeft - 100);
 
-	while(timeLeft != clock() - begin_time)
+	std::cout << "info string give search time: " << searchTime << "ms" << std::endl;
+	while(true)
 	{
-		if(searchTime <= clock() - begin_time)
+		auto now = std::chrono::steady_clock::now();
+		int calculatedTime = std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count();
+		if(calculatedTime >= searchTime)
 		{
 			// Exit the search thread and return best move found
+			std::cout << "info string ai thread cancelled (calculatedTime: " << calculatedTime << ")" << std::endl;
 			Search::ai_thread_running.exchange(false);
 			return;
 		}
 	}
-
-	// Ensure that the thread exits
-	Search::ai_thread_running.exchange(false);
 }
 
 void UCI::inputGo()
@@ -221,6 +220,9 @@ void UCI::inputGo()
 		timeLeft = std::stoi(getTime(cmd, "btime"));
 		increment = std::stoi(getTime(cmd, "binc"));
 	}
+
+	
+	Search::ai_thread_running.exchange(true);
 
 	std::thread ai_thread = std::thread(search, board);
 	ai_thread.detach();
