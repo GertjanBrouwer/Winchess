@@ -12,5 +12,10 @@ std::string Converter::formatPosition(short position)
 
 std::string Converter::formatMove(Move move)
 {
-	return formatPosition(move.startPosition) + formatPosition(move.targetPosition);
+	std::string formattedMove = formatPosition(move.startPosition) + formatPosition(move.targetPosition);
+	if(move.promotionPieceType != 0)
+	{
+		formattedMove += kPieceChars[move.promotionPieceType];
+	}
+	return formattedMove;
 }
