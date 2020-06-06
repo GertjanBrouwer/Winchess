@@ -37,13 +37,21 @@ Move Search::findBestMove(Board* board, int depth, PieceColor computerColor)
 CalculatedMove
 Search::alphabeta(Board* board, MoveGeneration* moveGenerator, int depth, int alpha, int beta, PieceColor computerColor)
 {
-	// Get all the legal moves for whoever is supposed to move
-	std::vector<Move> moves = moveGenerator->getAllMoves();
 
 	if(!ai_thread_running)
 		return {-1, -1};
 
 	Move bestMove = {-1, -1};
+	// Stop search if the search has reached the maximum depth
+	if(depth == 0)
+	{
+		double board_evaluation = Evaluation::GetPieceBasedEvaluation(board);
+		return {board_evaluation, bestMove, 1};
+	}
+
+	// Get all the legal moves for whoever is supposed to move
+	std::vector<Move> moves = moveGenerator->getAllMoves();
+	
 	// Stop search if there are no more legal moves
 	if (moves.size() == 0)
 	{
@@ -56,13 +64,6 @@ Search::alphabeta(Board* board, MoveGeneration* moveGenerator, int depth, int al
 			board_evaluation = board->turn == White ? -100 : 100;
 
 		return {board_evaluation, bestMove, 1};
-	}
-
-	// Stop search if the search has reached the maximum depth
-	if (depth == 0)
-	{
-		double board_evaluation = Evaluation::GetPieceBasedEvaluation(board);
-		return {board_evaluation, bestMove , 1};
 	}
 
 	// Maximize the value if it is the computer's turn to move
