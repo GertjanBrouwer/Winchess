@@ -1,12 +1,14 @@
 #pragma once
 #include <iostream>
 #include <vector>
+#include <unordered_map>
 
 #include "Board.h"
 #include "MoveGeneration.h"
 
 struct TTEntry
 {
+	uint64_t zobrist;
 	Move move;
 	double evaluation;
 	int depth;
@@ -27,5 +29,6 @@ private:
 	uint64_t pieceKeys[64][12];
 	std::vector<uint64_t> otherKeys;
 	Board* board;
-	std::map<uint64_t, TTEntry> transpositionTable;
+	int tableSize = 8000009;
+	TTEntry* transpositionTable;
 };

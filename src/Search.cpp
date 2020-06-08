@@ -40,24 +40,20 @@ Search::alphabeta(Board* board, MoveGeneration* moveGenerator, int depth, int al
 {
 	Move bestMove = {-1, -1};
 
+	uint64_t hash = TranspositionTable::globalInstance->hash(board);
+	TTEntry entry = TranspositionTable::globalInstance->probe(hash);
+
 	// Stop search if the search has reached the maximum depth
 	if(depth == 0)
 	{
 		double board_evaluation = Evaluation::GetPieceBasedEvaluation(board);
+		TranspositionTable::globalInstance->save(hash, bestMove, board_evaluation, depth);
 		return {board_evaluation, bestMove, 1};
 	}
 
-	uint64_t hash = TranspositionTable::globalInstance->hash(board);
+	if(entry.depth >= depth)
+		return {entry.evaluation, entry.move, 1};
 
-	TTEntry entry = TranspositionTable::globalInstance->probe(hash);
- 
-	if(entry.depth != -1)
-	{
-		if(entry.depth >= depth)
-		{
-			return {entry.evaluation, entry.move, 1};
-		}
-	}
 	// Get all the legal moves for whoever is supposed to move
 	std::vector<Move> moves = moveGenerator->getAllMoves();
 

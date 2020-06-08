@@ -6,6 +6,7 @@ TranspositionTable* TranspositionTable::globalInstance = nullptr;
 TranspositionTable::TranspositionTable()
 {
 	this->board = board;
+	transpositionTable = new TTEntry[tableSize];
 	std::default_random_engine generator(128612482);
 	std::uniform_int_distribution<uint64_t> distribution;
 
@@ -54,24 +55,24 @@ uint64_t TranspositionTable::getHashOfPiece(PieceType type, PieceColor color)
 
 void TranspositionTable::clear()
 {
-	transpositionTable.clear();
+	memset(transpositionTable, 0, tableSize * sizeof(TTEntry));
 }
 
 void TranspositionTable::save(uint64_t key, Move move, double evaluation, int depth)
 {
-	TTEntry newEntry = {move, evaluation, depth};
-	transpositionTable[key] = newEntry;
+	TTEntry newEntry = {key, move, evaluation, depth};
+	//transpositionTable[key] = newEntry;
+	transpositionTable[key % tableSize] = newEntry;
 }
 
 TTEntry TranspositionTable::probe(uint64_t key)
 {
-	auto test = transpositionTable.find(key);
+	TTEntry entry = transpositionTable[key % tableSize];
 
-	if(test == transpositionTable.end())
-	{
-		return {{-1,-1}, -1, -1};
-	}
-	return test->second;
+	if(entry.zobrist != key)
+		return {uint16_t(1), {-1, -1}, -1, -1};
+
+	return entry;
 }
 
 uint64_t TranspositionTable::hash(Board* board)

@@ -190,7 +190,6 @@ void timeClock(int timeLeft, int increment, Board* board)
 	int searchTime = std::min((int)((timeLeft / calculateEvalTime(board) + increment) * 0.9),
 							 timeLeft - 100);
 
-	std::cout << "info string give search time: " << searchTime << "ms" << std::endl;
 	while(true)
 	{
 		auto now = std::chrono::steady_clock::now();
@@ -198,7 +197,6 @@ void timeClock(int timeLeft, int increment, Board* board)
 		if(calculatedTime >= searchTime)
 		{
 			// Exit the search thread and return best move found
-			std::cout << "info string ai thread cancelled (calculatedTime: " << calculatedTime << ")" << std::endl;
 			Search::ai_thread_running.exchange(false);
 			return;
 		}
