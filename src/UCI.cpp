@@ -143,7 +143,7 @@ void search(Board* board)
 	{
 		std::cout << "info depth " << depth << std::endl;
 
-		Move foundMove = Search::findBestMove(board, depth, Black);
+		Move foundMove = Search::findBestMove(board, depth);
 		if(foundMove.startPosition == -1)
 			// Ignore found move if smaller than 0
 			break;
@@ -172,7 +172,7 @@ int getTime(std::string command, std::string part)
 int calculateEvalTime(Board* board)
 {
 	// Heuristics from http://http://facta.junis.ni.ac.rs/acar/acar200901/acar2009-07.pdf
-	int materialScore = Evaluation::GetPieceBasedEvaluationOfColor(board, board->turn);
+	int materialScore = Evaluation::GetPieceBasedEvaluationOfColor(board, board->turn) / 100;
 	if(materialScore < 20)
 		return materialScore + 10;
 	if(20 <= materialScore && materialScore <= 60)

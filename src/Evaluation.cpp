@@ -5,7 +5,7 @@
 #endif
 #include <sstream>
 
-inline int countBits(bitboard board)
+inline int bitCount(bitboard board)
 {
 #if _WIN32
 	return __popcnt64(board);
@@ -29,21 +29,21 @@ int Evaluation::GetPieceBasedEvaluation(Board* board)
 	total += whiteTotal;
 	total -= blackTotal;
 	
-	//return count
-	return total;
+	//return count 
+	return (board->turn == White ? total : -total);
 }
 
 int Evaluation::GetPieceBasedEvaluationOfColor(Board* board, PieceColor color)
 {
 	int total = 0;
 
-	total += countBits(board->pieces[color][Pawn]) * typeValue.find(Pawn)->second;
-	total += countBits(board->pieces[color][Knight]) * typeValue.find(Knight)->second;
-	total += countBits(board->pieces[color][Bishop]) * typeValue.find(Bishop)->second;
-	total += countBits(board->pieces[color][Rook]) * typeValue.find(Rook)->second;
-	total += countBits(board->pieces[color][Queen]) * typeValue.find(Queen)->second;
+	total += bitCount(board->pieces[color][Pawn]) * typeValue.find(Pawn)->second;
+	total += bitCount(board->pieces[color][Knight]) * typeValue.find(Knight)->second;
+	total += bitCount(board->pieces[color][Bishop]) * typeValue.find(Bishop)->second;
+	total += bitCount(board->pieces[color][Rook]) * typeValue.find(Rook)->second;
+	total += bitCount(board->pieces[color][Queen]) * typeValue.find(Queen)->second;
 
-	return total;
+	return total ;
 }
 
 std::string Evaluation::getBoardValue(Board* board)
