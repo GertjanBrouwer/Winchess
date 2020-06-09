@@ -55,7 +55,7 @@ uint64_t TranspositionTable::getHashOfPiece(PieceType type, PieceColor color)
 
 void TranspositionTable::clear()
 {
-	memset(transpositionTable, 0, tableSize * sizeof(TTEntry));
+	std::memset(transpositionTable, 0, tableSize * sizeof(TTEntry));
 }
 
 void TranspositionTable::save(uint64_t key, Move move, double evaluation, int depth)
