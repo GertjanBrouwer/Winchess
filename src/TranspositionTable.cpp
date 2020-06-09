@@ -1,5 +1,6 @@
 #include "TranspositionTable.h"
 #include <random>
+#include <cstring>
 
 TranspositionTable* TranspositionTable::globalInstance = nullptr;
 
