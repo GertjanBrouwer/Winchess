@@ -57,6 +57,7 @@ Search::alphabeta(Board* board, MoveGeneration* moveGenerator, int depth, int al
 	// Get all the legal moves for whoever is supposed to move
 	std::vector<Move> moves = moveGenerator->getAllMoves();
 
+
 	if(!ai_thread_running)
 		return {-1, -1};
 

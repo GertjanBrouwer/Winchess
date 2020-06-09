@@ -37,6 +37,7 @@ std::vector<Move> MoveGeneration::getAllMoves()
 		short pieceIndex = bitIndex(allPieces);
 		// List for all legal moves, used to assign move values
 		std::vector<Move> tempMoveList;
+		tempMoveList.reserve(8);
 
 		// Remove piece from allPieces
 		bitboard originMask = (bitboard)1 << pieceIndex;

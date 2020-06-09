@@ -161,16 +161,16 @@ void search(Board* board)
 	std::cout << "bestmove " << Converter::formatMove(bestMove) << std::endl;
 }
 
-std::string getTime(std::string command, std::string part)
+int getTime(std::string command, std::string part)
 {
 	if(command.find(part) != std::string::npos)
 	{
 		auto test = part.length();
 		command.erase(0, command.find(part) + part.length() + 1);
-		return command.substr(0, command.find(' '));
+		return  std::stoi(command.substr(0, command.find(' ')));
 	}
 
-	return "0";
+	return 0;
 }
 
 int calculateEvalTime(Board* board)
@@ -208,17 +208,23 @@ void UCI::inputGo()
 	std::string cmd = command;
 	int timeLeft;
 	int increment;
+	
 	if(board->turn == White)
 	{
-		timeLeft = std::stoi(getTime(cmd, "wtime"));
-		increment = std::stoi(getTime(cmd, "winc"));
+		timeLeft =getTime(cmd, "wtime");
+		increment = getTime(cmd, "winc");
 	}
 	else
 	{
-		timeLeft = std::stoi(getTime(cmd, "btime"));
-		increment = std::stoi(getTime(cmd, "binc"));
+		timeLeft = getTime(cmd, "btime");
+		increment = getTime(cmd, "binc");
 	}
 
+	// When you pass movetime with UCI, you're telling it to override any time management algorithms it might have, and to instead spend exactly x milliseconds analysing the position.
+	int moveTime = getTime(cmd, "movetime");
+	if(moveTime > 0)
+		timeLeft = moveTime;
+	
 	
 	Search::ai_thread_running.exchange(true);
 
