@@ -17,7 +17,6 @@ inline int bitCount(bitboard board)
 
 int Evaluation::GetPieceBasedEvaluation(Board* board)
 {
-
 	int total = 0;
 	unsigned int whiteTotal = 0;
 	unsigned int blackTotal = 0;
@@ -28,7 +27,7 @@ int Evaluation::GetPieceBasedEvaluation(Board* board)
 	//evaluate count and determine
 	total += whiteTotal;
 	total -= blackTotal;
-	
+
 	//return count 
 	return (board->turn == White ? total : -total);
 }
@@ -43,7 +42,7 @@ int Evaluation::GetPieceBasedEvaluationOfColor(Board* board, PieceColor color)
 	total += bitCount(board->pieces[color][Rook]) * typeValue.find(Rook)->second;
 	total += bitCount(board->pieces[color][Queen]) * typeValue.find(Queen)->second;
 
-	return total ;
+	return total;
 }
 
 std::string Evaluation::getBoardValue(Board* board)

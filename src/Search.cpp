@@ -1,13 +1,11 @@
 #include "Search.h"
 
-
 #include <algorithm>
 #include <ctime>
 #include <fstream>
 #include <chrono>
 #include "Converter.h"
 #include "Evaluation.h"
-
 
 const unsigned int R = 2; //Null-move reduction depth
 
@@ -21,7 +19,7 @@ void PrintSearchInfo(int value, time_t time, int depth, CalculatedMove bestMove)
 
 Move Search::findBestMove(Board* board, int depthLimit)
 {
-	auto start = std::chrono::steady_clock::now();
+	auto startTime = std::chrono::steady_clock::now();
 	// Get all the moves available for the computer
 	int alpha = -2000000000, beta = 2000000000;
 	MoveGeneration* moveGenerator = new MoveGeneration(board);
@@ -34,8 +32,8 @@ Move Search::findBestMove(Board* board, int depthLimit)
 		return {-1, -1};
 	}
 
-	auto now = std::chrono::steady_clock::now();
-	auto time = std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count();
+	auto currentTime = std::chrono::steady_clock::now();
+	int time = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count();
 
 	PrintSearchInfo(board->turn == White ? bestMove.value : -bestMove.value, time, depthLimit, bestMove);
 
@@ -75,7 +73,7 @@ Search::negaMax(Board* board, MoveGeneration* moveGenerator, int depth, int alph
 	moveGenerator->board = board;
 
 	////Null move pruning
-if (NullMoveAllowed(*board, moveGenerator, depth))
+	if (NullMoveAllowed(*board, moveGenerator, depth))
 	{
 		// Do null move
 		board->turn = static_cast<PieceColor>(!board->turn);
@@ -106,7 +104,7 @@ if (NullMoveAllowed(*board, moveGenerator, depth))
 		int board_evaluation = 0;
 
 		if (moveGenerator->isInCheck(kingPosition))
-			board_evaluation = -10000 - depth;
+			board_evaluation = -10000 - depth; // Score for checkmate (subtract depth to prioritize closer checkmates)
 
 		return {board_evaluation, bestMove, 1};
 	}
