@@ -29,6 +29,6 @@ private:
 	uint64_t pieceKeys[64][12];
 	std::vector<uint64_t> otherKeys;
 	Board* board;
-	int tableSize = 8000009;
+	int tableSize = 80000023;
 	TTEntry* transpositionTable;
 };
