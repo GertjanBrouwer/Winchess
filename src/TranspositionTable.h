@@ -6,11 +6,11 @@
 #include "Board.h"
 #include "MoveGeneration.h"
 
-enum Flags
+enum Bound
 {
+	Lowerbound,
 	Exact,
-	Alpha,
-	Beta
+	Upperbound
 };
 
 struct TTEntry
@@ -21,7 +21,7 @@ struct TTEntry
 	int depth;
 	int alpha;
 	int beta;
-	Flags flags;
+	Bound bound;
 };
 
 class TranspositionTable
@@ -32,7 +32,7 @@ public:
 	uint64_t hash(Board* board);
 	uint64_t getHashOfPiece(PieceType type, PieceColor color);
 	void clear();
-	void save(uint64_t key, Move move, int evaluation, int depth, int alpha, int beta, Flags flags);
+	void save(uint64_t key, Move move, int evaluation, int depth, int alpha, int beta, Bound bound);
 	TTEntry probe(uint64_t key);
 
 private:

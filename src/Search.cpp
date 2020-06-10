@@ -49,15 +49,15 @@ inline bool NullMoveAllowed(Board& board, MoveGeneration* move_generation, int d
 	int kingPosition = MoveGeneration::getBitIndex(board.pieces[board.turn][King]);
 	bool isInCheck = move_generation->isInCheck(kingPosition);
 	return !isInCheck &&
-		//don't drop directly into null move pruning
-		depth > R + 1
-		//avoid null move pruning in very late game positions due to zanauag issues. Even with verification search e.g 8/6k1/8/8/8/8/1K6/Q7 w - - 0 1
-		&& bitCount(board.getAllPieces()) >= 5;
+				 //don't drop directly into null move pruning
+				 depth > R + 1
+				 //avoid null move pruning in very late game positions due to zanauag issues. Even with verification search e.g 8/6k1/8/8/8/8/1K6/Q7 w - - 0 1
+				 && bitCount(board.getAllPieces()) >= 5;
 }
 
 CalculatedMove Search::negaMax(Board* board, MoveGeneration* moveGenerator, int depth, int alpha, int beta)
 {
-	Flags flags = Alpha;
+	int alphaOrig = alpha;
 	Move bestMove = {-1, -1};
 	nodes++;
 
@@ -66,12 +66,12 @@ CalculatedMove Search::negaMax(Board* board, MoveGeneration* moveGenerator, int 
 
 	if(entry.depth >= depth)
 	{
-		if(entry.flags == Exact)
+		if(entry.bound == Exact)
 			return {entry.evaluation, entry.move};
-		else if(entry.flags == Beta && entry.alpha > alpha)
-			alpha = entry.alpha;
-		else if(entry.flags == Alpha && entry.beta < beta)
-			beta = entry.beta;
+		else if(entry.bound == Lowerbound)
+			alpha = std::max(entry.alpha, alpha);
+		else if(entry.bound == Upperbound)
+			beta = std::min(entry.beta, beta);
 
 		if(alpha >= beta)
 			return {entry.evaluation, entry.move};
@@ -81,7 +81,6 @@ CalculatedMove Search::negaMax(Board* board, MoveGeneration* moveGenerator, int 
 	if(depth <= 0)
 	{
 		int board_evaluation = Evaluation::GetPieceBasedEvaluation(board);
-		TranspositionTable::globalInstance->save(hash, bestMove, board_evaluation, depth, alpha, beta, Exact);
 		return {board_evaluation, bestMove};
 	}
 
@@ -152,19 +151,18 @@ CalculatedMove Search::negaMax(Board* board, MoveGeneration* moveGenerator, int 
 			best_calculated_move = calculated_move;
 
 		if(best_calculated_move.value > alpha)
-		{
-			flags = Exact;
 			alpha = calculated_move.value;
-		}
 
 		if(alpha >= beta)
-		{
-			TranspositionTable::globalInstance->save(
-					hash, best_calculated_move.move, best_calculated_move.value, depth, alpha, beta, Beta);
-			return {beta, move};		
-		}
+			return {beta, move};
 	}
+	Bound bound;
+	if(best_calculated_move.value <= alphaOrig)
+		bound = Upperbound;
+	else if (best_calculated_move.value >= beta)
+		bound = Lowerbound;
+	else bound = Exact;
 	TranspositionTable::globalInstance->save(
-			hash, best_calculated_move.move, best_calculated_move.value, depth, alpha, beta, flags);
+			hash, best_calculated_move.move, best_calculated_move.value, depth, alpha, beta, bound);
 	return best_calculated_move;
 }

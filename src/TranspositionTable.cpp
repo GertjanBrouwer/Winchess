@@ -59,9 +59,9 @@ void TranspositionTable::clear()
 	std::memset(transpositionTable, 0, tableSize * sizeof(TTEntry));
 }
 
-void TranspositionTable::save(uint64_t key, Move move, int evaluation, int depth, int alpha, int beta, Flags flags)
+void TranspositionTable::save(uint64_t key, Move move, int evaluation, int depth, int alpha, int beta, Bound bound)
 {
-	TTEntry newEntry = {key, move, evaluation, depth, alpha, beta, flags};
+	TTEntry newEntry = {key, move, evaluation, depth, alpha, beta, bound};
 	transpositionTable[key % tableSize] = newEntry;
 }
 
