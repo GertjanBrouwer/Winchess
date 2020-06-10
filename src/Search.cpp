@@ -158,13 +158,11 @@ CalculatedMove Search::negaMax(Board* board, MoveGeneration* moveGenerator, int 
 			return {beta, move};
 	}
 
-	Flag flag;
+	Flag flag = Exact;
 	if(best_calculated_move.value <= alphaOrig)
 		flag = Upperbound;
 	else if (best_calculated_move.value >= beta)
 		flag = Lowerbound; 
-	else 
-		flag = Exact;
 
 	TranspositionTable::globalInstance->save(hash, best_calculated_move.move, best_calculated_move.value, depth, flag);
 	return best_calculated_move;
