@@ -7,6 +7,7 @@
 #include <chrono>
 #include <ctime>
 #include <fstream>
+#include <cmath>
 
 int nodes;
 const unsigned int R = 2; //Null-move reduction depth
@@ -69,9 +70,9 @@ CalculatedMove Search::negaMax(Board* board, MoveGeneration* moveGenerator, int 
 		if(entry.bound == Exact)
 			return {entry.evaluation, entry.move};
 		else if(entry.bound == Lowerbound)
-			alpha = std::max(entry.alpha, alpha);
+			alpha = std::max(entry.alpha, entry.evaluation);
 		else if(entry.bound == Upperbound)
-			beta = std::min(entry.beta, beta);
+			beta = std::min(entry.beta, entry.evaluation);
 
 		if(alpha >= beta)
 			return {entry.evaluation, entry.move};
@@ -160,8 +161,9 @@ CalculatedMove Search::negaMax(Board* board, MoveGeneration* moveGenerator, int 
 	if(best_calculated_move.value <= alphaOrig)
 		bound = Upperbound;
 	else if (best_calculated_move.value >= beta)
-		bound = Lowerbound;
-	else bound = Exact;
+		bound = Lowerbound; 
+	else 
+		bound = Exact;
 	TranspositionTable::globalInstance->save(
 			hash, best_calculated_move.move, best_calculated_move.value, depth, alpha, beta, bound);
 	return best_calculated_move;
