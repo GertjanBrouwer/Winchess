@@ -30,7 +30,7 @@ TranspositionTable::TranspositionTable()
 	this->board = board;
 
 	tableSize = getMemory() / sizeof(TTEntry) / 10;
-	std::cout << "info" << tableSize << std::endl;
+	std::cout << "info " << tableSize << std::endl;
 	transpositionTable = new TTEntry[tableSize];
 
 	std::default_random_engine generator(128612482);
