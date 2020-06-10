@@ -50,7 +50,7 @@ void Board::moveByChar(const char* moveChar)
 {
 	short startPosition = positionToIndex(moveChar);
 	short targetPosition = positionToIndex(&moveChar[2]);
-	short promotionType = 0;
+	uint8_t promotionType = 0;
 	//check if move is a promotion, promotions are noted as e.q. e7e8Q 
 	if (std::strlen(moveChar) == 5)
 		promotionType = types.at(moveChar[4]);
@@ -290,7 +290,7 @@ void Board::setBoard(std::string fen)
 	fen = fen.erase(0, 2);
 
 	//check if possible to castle
-	//concat length of string + space
+	//concat size of string + space
 	std::string castlemove = fen.substr(0, fen.find(' '));
 	castleWKingSide = (castlemove.find('K') != std::string::npos) ? true : false;
 	castleWQueenSide = (castlemove.find('Q') != std::string::npos) ? true : false;
@@ -299,7 +299,7 @@ void Board::setBoard(std::string fen)
 	fen = fen.erase(0, castlemove.length() + 1);
 
 	//check if en passant is possible
-	//concat length of string + space
+	//concat size of string + space
 	std::string enPassant = fen.substr(0, fen.find(' '));
 	this->enPassant = 0;
 	if (enPassant.size() == 2)

@@ -3,13 +3,12 @@
 #include <vector>
 #include <iostream>
 
-
 struct Move
 {
 	short startPosition;
 	short targetPosition;
-	short promotionPieceType = 0;
-	short score;
+	uint8_t promotionPieceType = 0;
+	int8_t score;
 };
 
 typedef uint64_t bitboard;
@@ -48,7 +47,6 @@ enum PieceColor
 	White,
 	Black
 };
-
 
 struct Piece
 {

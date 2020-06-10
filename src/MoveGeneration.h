@@ -39,7 +39,8 @@ private:
 public:
 	Board* board;
 	MoveGeneration(Board* board);
-	std::vector<Move> getAllMoves();
+	std::vector<Move> getAllMoves(Move pv, bool capturesOnly = false);
+	std::vector<Move> getCaptureMoves();
 
 	static int getBitIndex(bitboard board);
 	
