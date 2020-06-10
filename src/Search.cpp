@@ -62,7 +62,7 @@ CalculatedMove Search::negaMax(Board* board, MoveGeneration* moveGenerator, int 
 	Move bestMove = {-1, -1};
 	nodes++;
 
-	/*uint64_t hash = TranspositionTable::globalInstance->hash(board);
+	uint64_t hash = TranspositionTable::globalInstance->hash(board);
 	TTEntry entry = TranspositionTable::globalInstance->probe(hash);
 
 	if(entry.depth >= depth)
@@ -76,7 +76,7 @@ CalculatedMove Search::negaMax(Board* board, MoveGeneration* moveGenerator, int 
 
 		if(alpha >= beta)
 			return {entry.evaluation, entry.move};
-	}*/
+	}
 
 	// Stop search if the search has reached the maximum depth
 	if(depth <= 0)
@@ -158,7 +158,7 @@ CalculatedMove Search::negaMax(Board* board, MoveGeneration* moveGenerator, int 
 			return {beta, move};
 	}
 
-	/*Flag flag;
+	Flag flag;
 	if(best_calculated_move.value <= alphaOrig)
 		flag = Upperbound;
 	else if (best_calculated_move.value >= beta)
@@ -166,6 +166,6 @@ CalculatedMove Search::negaMax(Board* board, MoveGeneration* moveGenerator, int 
 	else 
 		flag = Exact;
 
-	TranspositionTable::globalInstance->save(hash, best_calculated_move.move, best_calculated_move.value, depth, flag);*/
+	TranspositionTable::globalInstance->save(hash, best_calculated_move.move, best_calculated_move.value, depth, flag);
 	return best_calculated_move;
 }

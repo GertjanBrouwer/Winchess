@@ -1,13 +1,36 @@
 #include "TranspositionTable.h"
 #include <random>
 #include <cstring>
+#include <windows.h>
+
+#if __GNUC__
+#include <unistd.h>
+#endif
 
 TranspositionTable* TranspositionTable::globalInstance = nullptr;
+
+inline long long getMemory()
+{
+#if __GNUC__
+	long pages = sysconf(_SC_PHYS_PAGES);
+	long page_size = sysconf(_SC_PAGE_SIZE);
+	return pages * page_size;
+#elif _WIN32
+	MEMORYSTATUSEX status;
+	status.dwLength = sizeof(status);
+	GlobalMemoryStatusEx(&status);
+	return status.ullTotalPhys;
+#endif
+}
+
 
 TranspositionTable::TranspositionTable()
 {
 	this->board = board;
+
+	tableSize = getMemory() / sizeof(TTEntry) / 10;
 	transpositionTable = new TTEntry[tableSize];
+
 	std::default_random_engine generator(128612482);
 	std::uniform_int_distribution<uint64_t> distribution;
 
