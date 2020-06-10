@@ -1,7 +1,6 @@
 #include "TranspositionTable.h"
 #include <random>
 #include <cstring>
-#include <windows.h>
 
 #if __GNUC__
 #include <unistd.h>
