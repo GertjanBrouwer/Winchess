@@ -32,7 +32,7 @@ public:
 	uint64_t hash(Board* board);
 	uint64_t getHashOfPiece(PieceType type, PieceColor color);
 	void clear();
-	void save(uint64_t key, Move move, double evaluation, int depth, int alpha, int beta, Flags flags);
+	void save(uint64_t key, Move move, int evaluation, int depth, int alpha, int beta, Flags flags);
 	TTEntry probe(uint64_t key);
 
 private:

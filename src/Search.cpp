@@ -21,7 +21,6 @@ void PrintSearchInfo(int value, time_t time, int depth, CalculatedMove bestMove)
 Move Search::findBestMove(Board* board, int depthLimit)
 {
 	nodes = 0;
-
 	auto startTime = std::chrono::steady_clock::now();
 	// Get all the moves available for the computer
 	int alpha = -2000000000, beta = 2000000000;
@@ -50,10 +49,10 @@ inline bool NullMoveAllowed(Board& board, MoveGeneration* move_generation, int d
 	int kingPosition = MoveGeneration::getBitIndex(board.pieces[board.turn][King]);
 	bool isInCheck = move_generation->isInCheck(kingPosition);
 	return !isInCheck &&
-				 //don't drop directly into null move pruning
-				 depth > R + 1
-				 //avoid null move pruning in very late game positions due to zanauag issues. Even with verification search e.g 8/6k1/8/8/8/8/1K6/Q7 w - - 0 1
-				 && bitCount(board.getAllPieces()) >= 5;
+		//don't drop directly into null move pruning
+		depth > R + 1
+		//avoid null move pruning in very late game positions due to zanauag issues. Even with verification search e.g 8/6k1/8/8/8/8/1K6/Q7 w - - 0 1
+		&& bitCount(board.getAllPieces()) >= 5;
 }
 
 CalculatedMove Search::negaMax(Board* board, MoveGeneration* moveGenerator, int depth, int alpha, int beta)
