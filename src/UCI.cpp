@@ -33,7 +33,7 @@ void UCI::Read()
 		//read incomming line and save in char array command
 		std::cin.getline(command, 2047);
 		std::cout << "-----------------" << std::endl;
-		
+
 		if (strstr(command, "setoption"))
 			inputSetOptions();
 		else if (strstr(command, "isready"))
@@ -119,7 +119,7 @@ void UCI::inputPosition()
 		while (cmd.length() > 0)
 		{
 			int moveLength = cmd.find(' ');
-			if(moveLength < 0)
+			if (moveLength < 0)
 				moveLength = cmd.length();
 			std::cout << cmd.substr(0, moveLength) << std::endl;
 
@@ -135,38 +135,17 @@ void UCI::inputPosition()
 void search(Board* board)
 {
 	TranspositionTable::globalInstance->clear();
-
-	int depth = 2;
-
-	MoveGeneration* moveGenerator = new MoveGeneration(board);
-	Move bestMove = moveGenerator->getAllMoves()[0];
-	delete moveGenerator;
-
-	while(Search::ai_thread_running)
-	{
-		std::cout << "info depth " << depth << std::endl;
-
-		Move foundMove = Search::findBestMove(board, depth);
-		if(foundMove.startPosition == -1)
-			// Ignore found move if smaller than 0
-			break;
-
-		bestMove = foundMove;
-		depth++;
-		std::cout << "info currmove " << Converter::formatMove(bestMove) << " currmovenumber " << depth - 1 << std::endl;
-	}
-
-
+	Move bestMove = Search::findBestMove(board);
 	std::cout << "bestmove " << Converter::formatMove(bestMove) << std::endl;
 }
 
 int getTime(std::string command, std::string part)
 {
-	if(command.find(part) != std::string::npos)
+	if (command.find(part) != std::string::npos)
 	{
 		auto test = part.length();
 		command.erase(0, command.find(part) + part.length() + 1);
-		return  std::stoi(command.substr(0, command.find(' ')));
+		return std::stoi(command.substr(0, command.find(' ')));
 	}
 
 	return 0;
@@ -176,24 +155,24 @@ int calculateEvalTime(Board* board)
 {
 	// Heuristics from http://http://facta.junis.ni.ac.rs/acar/acar200901/acar2009-07.pdf
 	int materialScore = Evaluation::GetPieceBasedEvaluationOfColor(board, board->turn) / 100;
-	if(materialScore < 20)
+	if (materialScore < 20)
 		return materialScore + 10;
-	if(20 <= materialScore && materialScore <= 60)
+	if (20 <= materialScore && materialScore <= 60)
 		return round((3 / 8 * float(materialScore))) + 22;
 	return round((3 / 8 * float(materialScore))) - 30;
 }
 
 void timeClock(int timeLeft, int increment, Board* board)
-{ 
+{
 	auto startTime = std::chrono::steady_clock::now();
 	int searchTime = std::min((int)((timeLeft / calculateEvalTime(board) + increment) * 0.9),
-							 timeLeft - 100);
+	                          timeLeft - 100);
 
 	while(true)
 	{
 		auto now = std::chrono::steady_clock::now();
 		int calculatedTime = std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count();
-		if(calculatedTime >= searchTime)
+		if (calculatedTime >= searchTime)
 		{
 			// Exit the search thread and return best move found
 			Search::ai_thread_running.exchange(false);
@@ -207,10 +186,10 @@ void UCI::inputGo()
 	std::string cmd = command;
 	int timeLeft;
 	int increment;
-	
-	if(board->turn == White)
+
+	if (board->turn == White)
 	{
-		timeLeft =getTime(cmd, "wtime");
+		timeLeft = getTime(cmd, "wtime");
 		increment = getTime(cmd, "winc");
 	}
 	else
@@ -221,15 +200,15 @@ void UCI::inputGo()
 
 	// When you pass movetime with UCI, you're telling it to override any time management algorithms it might have, and to instead spend exactly x milliseconds analysing the position.
 	int moveTime = getTime(cmd, "movetime");
-	if(moveTime > 0)
+	if (moveTime > 0)
 		timeLeft = moveTime;
-	
+
 	Search::ai_thread_running.exchange(true);
 
 	std::thread ai_thread = std::thread(search, board);
 	ai_thread.detach();
 
-	if(timeLeft > 0)
+	if (timeLeft > 0)
 	{
 		std::thread timer_thread = std::thread(timeClock, timeLeft, increment, board);
 		timer_thread.detach();

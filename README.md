@@ -1,3 +1,5 @@
+![C/C++ CI](https://github.com/GertjanBrouwer/Winchess/workflows/C/C++%20CI/badge.svg)
+
 # Winchess
 Winchess engine
 
