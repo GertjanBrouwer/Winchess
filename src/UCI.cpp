@@ -134,7 +134,6 @@ void UCI::inputPosition()
 
 void search(Board* board)
 {
-	TranspositionTable::globalInstance->clear();
 	Move bestMove = Search::findBestMove(board);
 	std::cout << "bestmove " << Converter::formatMove(bestMove) << std::endl;
 }

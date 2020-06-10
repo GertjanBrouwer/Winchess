@@ -31,6 +31,7 @@ Move Search::findBestMove(Board* board)
 
 	while(Search::ai_thread_running)
 	{
+		TranspositionTable::globalInstance->clear();
 		std::cout << "info depth " << depth << std::endl;
 
 		Move foundMove = Search::findBestMove(board, depth);
