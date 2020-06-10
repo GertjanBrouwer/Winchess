@@ -10,7 +10,7 @@ struct TTEntry
 {
 	uint64_t zobrist;
 	Move move;
-	double evaluation;
+	int evaluation;
 	int depth;
 };
 

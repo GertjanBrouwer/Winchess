@@ -84,7 +84,7 @@ jobs:
         if: github.event_name == 'pull_request'
 
       - name: run-cutechess
-        run: cutechess-cli -engine cmd=${{ runner.workspace }}/build/winchess name=winchess -engine cmd=${{ runner.workspace }}/master-build/winchess name=winchessmaster -each proto=uci tc=40/5.2+0.0832 -concurrency 1 -rounds 20 -games 2 -draw movenumber=40 movecount=4 score=8 -resign  movecount=4 score=500 -openings file=${{ github.workspace }}/tests/assets/silversuite.pgn -repeat -recover -wait 1 -pgnout ${{ runner.workspace }}/play-results.txt
+        run: cutechess-cli -engine cmd=${{ runner.workspace }}/build/winchess name=winchess -engine cmd=${{ runner.workspace }}/master-build/winchess name=winchessmaster -each proto=uci tc=40/5.2+0.0832 -concurrency 1 -rounds 40 -games 2 -draw movenumber=40 movecount=4 score=8 -resign  movecount=4 score=500 -openings file=${{ github.workspace }}/tests/assets/silversuite.pgn -repeat -recover -wait 1 -pgnout ${{ runner.workspace }}/play-results.txt
         if: github.event_name == 'pull_request'
 
       - uses: actions/upload-artifact@v2

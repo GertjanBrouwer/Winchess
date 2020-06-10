@@ -1,127 +1,151 @@
 #include "Search.h"
 
+#include <algorithm>
+#include <chrono>
 #include <ctime>
 #include <fstream>
-#include <chrono>
 #include "Converter.h"
 #include "Evaluation.h"
 #include "TranspositionTable.h"
 
+const unsigned int R = 2; //Null-move reduction depth
+
 std::atomic<bool> Search::ai_thread_running(false);
 
-Move Search::findBestMove(Board* board, int depth, PieceColor computerColor)
+int nodes = 0;
+
+void PrintSearchInfo(int value, time_t time, int depth, CalculatedMove bestMove)
 {
-	auto start = std::chrono::steady_clock::now();
+	std::cout << "info score cp " << value << " depth " << depth << " nodes  " << nodes << " time " << time
+						<< " pv " << Converter::formatMove(bestMove.move) << std::endl;
+}
+
+Move Search::findBestMove(Board* board, int depthLimit)
+{
+	auto startTime = std::chrono::steady_clock::now();
 	// Get all the moves available for the computer
 	int alpha = -2000000000, beta = 2000000000;
 	MoveGeneration* moveGenerator = new MoveGeneration(board);
-
+	nodes = 0;
+	
 	// depth - 1 : Because the leaf nodes are on depth is 0 instead of 1
-	CalculatedMove bestMove = alphabeta(board, moveGenerator, depth - 1, alpha, beta, computerColor);
+	CalculatedMove bestMove = negaMax(board, moveGenerator, depthLimit - 1, alpha, beta);
 
 	if(!ai_thread_running)
 	{
 		return {-1, -1};
 	}
 
-	auto now = std::chrono::steady_clock::now();
-	auto time = std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count();
-	
-	std::cout << "info score cp " << bestMove.value * 100 << " depth " << depth  << " nodes  " << bestMove.nodes << " time " << time << " pv " << Converter::formatMove(bestMove.move)
-						<< std::endl;
-	
+	auto currentTime = std::chrono::steady_clock::now();
+	int time = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count();
+
+	PrintSearchInfo(board->turn == White ? bestMove.value : -bestMove.value, time, depthLimit, bestMove);
+
 	delete moveGenerator;
-  
+
 	return bestMove.move;
 }
 
-CalculatedMove
-Search::alphabeta(Board* board, MoveGeneration* moveGenerator, int depth, int alpha, int beta, PieceColor computerColor)
+inline bool NullMoveAllowed(Board& board, MoveGeneration* move_generation, int depth)
+{
+	int kingPosition = MoveGeneration::getBitIndex(board.pieces[board.turn][King]);
+	bool isInCheck = move_generation->isInCheck(kingPosition);
+	return !isInCheck &&
+				 //don't drop directly into null move pruning
+				 depth > R + 1
+				 //avoid null move pruning in very late game positions due to zanauag issues. Even with verification search e.g 8/6k1/8/8/8/8/1K6/Q7 w - - 0 1
+				 && bitCount(board.getAllPieces()) >= 5;
+}
+
+CalculatedMove Search::negaMax(Board* board, MoveGeneration* moveGenerator, int depth, int alpha, int beta)
 {
 	Move bestMove = {-1, -1};
+	nodes++;
 
 	uint64_t hash = TranspositionTable::globalInstance->hash(board);
 	TTEntry entry = TranspositionTable::globalInstance->probe(hash);
 
-	// Stop search if the search has reached the maximum depth
-	if(depth == 0)
-	{
-		double board_evaluation = Evaluation::GetPieceBasedEvaluation(board);
-		TranspositionTable::globalInstance->save(hash, bestMove, board_evaluation, depth);
-		return {board_evaluation, bestMove, 1};
-	}
-
 	if(entry.depth >= depth)
-		return {entry.evaluation, entry.move, 1};
+		return {entry.evaluation, entry.move};
 
-	// Get all the legal moves for whoever is supposed to move
-	std::vector<Move> moves = moveGenerator->getAllMoves();
-
+	// Stop search if the search has reached the maximum depth
+	if(depth <= 0)
+	{
+		int board_evaluation = Evaluation::GetPieceBasedEvaluation(board);
+		TranspositionTable::globalInstance->save(hash, bestMove, board_evaluation, depth);
+		return {board_evaluation, bestMove};
+	}
 
 	if(!ai_thread_running)
 		return {-1, -1};
 
+	moveGenerator->board = board;
+
+	////Null move pruning
+	if(NullMoveAllowed(*board, moveGenerator, depth))
+	{
+		// Do null move
+		board->turn = static_cast<PieceColor>(!board->turn);
+		bitboard prevEnPassant = board->enPassant;
+		board->enPassant = 0;
+
+		CalculatedMove bestNullMove = negaMax(board, moveGenerator, depth - 1 - R, -beta, -beta + 1);
+
+		// Undo null move
+		board->turn = static_cast<PieceColor>(!board->turn);
+		board->enPassant = prevEnPassant;
+
+		if(-bestNullMove.value >= beta)
+		{
+			return {beta, {-1, -1}};
+		}
+	}
+
+	// Get all the legal moves for whoever is supposed to move
+	std::vector<Move> moves = moveGenerator->getAllMoves();
+
 	// Stop search if there are no more legal moves
-	if (moves.size() == 0)
+	if(moves.size() == 0)
 	{
 		bitboard b = board->pieces[board->turn][King];
 		int kingPosition = MoveGeneration::getBitIndex(b);
 
-		double board_evaluation = 0;
+		int board_evaluation = 0;
 
-		if (moveGenerator->isInCheck(kingPosition))
-			board_evaluation = board->turn == White ? -100 : 100;
+		if(moveGenerator->isInCheck(kingPosition))
+			board_evaluation = -10000 - depth; // Score for checkmate (subtract depth to prioritize closer checkmates)
 
-		return {board_evaluation, bestMove, 1};
+		return {board_evaluation, bestMove};
 	}
 
 	// Maximize the value if it is the computer's turn to move
 	CalculatedMove best_calculated_move = {};
-
-	int nodes = 0;
-	// Go through all the legal moves, searching for the move that is worst for the computer
-	for(unsigned int moveIndex = 0; moveIndex < moves.size(); ++moveIndex)
+	best_calculated_move.value = -20000;
+	for(Move move : moves)
 	{
-		Move move = moves[moveIndex];
-		// Update board and recursively call the alpha-beta algorithm
 		Board* newBoard = board->getBoardWithMove(move);
-
 		moveGenerator->board = newBoard;
-		CalculatedMove calculated_move = alphabeta(newBoard, moveGenerator, depth - 1, alpha, beta, computerColor);
 
-		calculated_move.move = move;
-		nodes += calculated_move.nodes;
-		
+		CalculatedMove calculated_move = negaMax(newBoard, moveGenerator, depth - 1, -beta, -alpha);
+
+		if(!ai_thread_running)
+			return {-1, -1};
+
 		moveGenerator->board = board;
-		delete newBoard;
-		// Maximize the value if it is the computer's turn to move
-		if (board->turn == White)
-		{
-			// Update the best board value and alpha, the best position the computer is guaranteed of
-			if (moveIndex == 0 || calculated_move.value > best_calculated_move.value)
-				best_calculated_move = calculated_move;
-			else if(calculated_move.value == best_calculated_move.value && rand() % 500 == 0)
-				best_calculated_move = calculated_move;
-			if (best_calculated_move.value > alpha)
-				alpha = best_calculated_move.value;
-		}
-		// Minimize the board's value if it is the opponent's turn to move
-		else
-		{
-			// Update the best board value and beta, the best position the user is guaranteed of
-			if (moveIndex == 0 || calculated_move.value < best_calculated_move.value)
-				best_calculated_move = calculated_move;
-			else if(calculated_move.value == best_calculated_move.value && rand() % 500 == 0)
-				best_calculated_move = calculated_move;
-			if (best_calculated_move.value < beta)
-				beta = best_calculated_move.value;
-		}
-		// Stop if the move is worse than all the previous moves
-		if (beta <= alpha)
-			break;
-	}
+		calculated_move.value = -calculated_move.value;
+		calculated_move.move = move;
 
+		delete newBoard;
+
+		if(calculated_move.value > best_calculated_move.value)
+			best_calculated_move = calculated_move;
+
+		if(best_calculated_move.value > alpha)
+			alpha = calculated_move.value;
+
+		if(alpha >= beta)
+			return {beta, move};
+	}
 	TranspositionTable::globalInstance->save(hash, best_calculated_move.move, best_calculated_move.value, depth);
-	best_calculated_move.nodes = nodes;
 	return best_calculated_move;
 }

@@ -62,7 +62,6 @@ void TranspositionTable::clear()
 void TranspositionTable::save(uint64_t key, Move move, double evaluation, int depth)
 {
 	TTEntry newEntry = {key, move, evaluation, depth};
-	//transpositionTable[key] = newEntry;
 	transpositionTable[key % tableSize] = newEntry;
 }
 
