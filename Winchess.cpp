@@ -10,8 +10,8 @@
 
 int main()
 {
+	TranspositionTable::globalInstance = new TranspositionTable();
 	Board* board = new Board();
 	UCI* uci = new UCI(board);
-	TranspositionTable::globalInstance = new TranspositionTable();
 	uci->Read();
 }
