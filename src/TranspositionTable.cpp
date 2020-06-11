@@ -47,17 +47,17 @@ TranspositionTable::TranspositionTable()
 	}
 
 	// Current color
-	otherKeys.push_back(distribution(generator));
+	remainderKeys.push_back(distribution(generator));
 	// Enpassant
-	otherKeys.push_back(distribution(generator));
+	remainderKeys.push_back(distribution(generator));
 	// White kingside castle
-	otherKeys.push_back(distribution(generator));
+	remainderKeys.push_back(distribution(generator));
 	// Black kingside castle
-	otherKeys.push_back(distribution(generator));
+	remainderKeys.push_back(distribution(generator));
 	// White queenside castle
-	otherKeys.push_back(distribution(generator));
+	remainderKeys.push_back(distribution(generator));
 	// Black queenside castle
-	otherKeys.push_back(distribution(generator));
+	remainderKeys.push_back(distribution(generator));
 }
 
 uint64_t TranspositionTable::getHashOfPiece(PieceType type, PieceColor color)
@@ -125,22 +125,22 @@ uint64_t TranspositionTable::hash(Board* board)
 	hash ^= getHashOfPiece(King, Black);
 
 	if(board->turn == Black)
-		hash ^= otherKeys[0];
+		hash ^= remainderKeys[0];
 	if(board->enPassant)
 	{
 		int squareIndex = MoveGeneration::getBitIndex(board->enPassant);
 		int rank = squareIndex / 8;
 		int file = squareIndex % 8;
-		hash ^= uint64_t(rank ^ file) ^ otherKeys[1];	
+		hash ^= uint64_t(rank ^ file) ^ remainderKeys[1];	
 	}
 	if(board->castleWKingSide)
-		hash ^= otherKeys[2];
+		hash ^= remainderKeys[2];
 	if(board->castleBKingSide)
-		hash ^= otherKeys[3];
+		hash ^= remainderKeys[3];
 	if(board->castleWQueenSide)
-		hash ^= otherKeys[4];
+		hash ^= remainderKeys[4];
 	if(board->castleBQueenSide)
-		hash ^= otherKeys[5];
+		hash ^= remainderKeys[5];
 
 	return hash;
 }

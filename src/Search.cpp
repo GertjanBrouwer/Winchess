@@ -91,12 +91,12 @@ inline bool NullMoveAllowed(Board& board, MoveGeneration* move_generation, int d
 }
 
 int Search::QuiescenceSearch(Board* board,
-							MoveGeneration* moveGenerator,
-							int alpha,
-							int beta,
-							int depth,
-							int distanceFromRoot,
-							MoveList* previousPv)
+														 MoveGeneration* moveGenerator,
+														 int alpha,
+														 int beta,
+														 int depth,
+														 int distanceFromRoot,
+														 MoveList* previousPv)
 
 {
 	if(distanceFromRoot >= MAX_DEPTH)
@@ -142,14 +142,14 @@ int Search::QuiescenceSearch(Board* board,
 }
 
 int Search::negaMax(Board* board,
-					MoveGeneration* moveGenerator,
-					int depth,
-					int alpha,
-					int beta,
-					int distanceFromRoot,
-					MoveList* previousPv)
+										MoveGeneration* moveGenerator,
+										int depth,
+										int alpha,
+										int beta,
+										int distanceFromRoot,
+										MoveList* previousPv)
 {
-	int alphaOrig = alpha;
+	int alphaOrigin = alpha;
 
 	nodes++;
 	MoveList pv;
@@ -260,7 +260,7 @@ int Search::negaMax(Board* board,
 	}
 
 	Flag flag = Exact;
-	if(alpha <= alphaOrig)
+	if(alpha <= alphaOrigin)
 		flag = Upperbound;
 	else if(alpha >= beta)
 		flag = Lowerbound;
