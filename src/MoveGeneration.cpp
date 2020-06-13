@@ -1,24 +1,10 @@
 ﻿#include "MoveGeneration.h"
-#include <algorithm>
+
+
 // Function to calculate the absolute difference
 inline int8_t absDiff(int a, int b)
 {
 	return a < b ? b - a : a - b;
-}
-
-inline short bitIndex(bitboard board)
-{
-#if __GNUC__
-	return __builtin_ctzll(board);
-#elif __INTEL_COMPILER
-	return _bit_scan_forward(board);
-#elif _WIN32
-	unsigned long pieceIndex;
-	_BitScanForward64(&pieceIndex, board);
-	return pieceIndex;
-#else
-	return ffsl(board);
-#endif
 }
 
 MoveGeneration::MoveGeneration(Board* board)
@@ -40,7 +26,7 @@ std::vector<Move> MoveGeneration::getAllMoves(Move pvMove, bool capturesOnly)
 
 	while (allPieces)
 	{
-		short pieceIndex = bitIndex(allPieces);
+		short pieceIndex = Util::bitIndex(allPieces);
 		// List for all legal moves, used to assign move values
 
 		// Remove piece from allPieces
@@ -79,12 +65,13 @@ std::vector<Move> MoveGeneration::getAllMoves(Move pvMove, bool capturesOnly)
 				moves |= getCastlingMoves(pieceIndex);
 		}
 
+		// Remove if?
 		if (moves == 0)
 			continue;
 
 		while (moves)
 		{
-			short destination = bitIndex(moves);
+			short destination = Util::bitIndex(moves);
 			// Remove piece from allPieces
 			moves &= ~((bitboard)1 << destination);
 
@@ -121,7 +108,7 @@ std::vector<Move> MoveGeneration::getAllMoves(Move pvMove, bool capturesOnly)
 				board->pieces[!board->turn][Queen] &= ~queenPieceRemoved;
 
 				bitboard b = board->pieces[board->turn][King];
-				int kingPosition = getBitIndex(b);
+				int kingPosition = Util::bitIndex(b);
 				board->updateBitboardCache();
 
 				if (!isInCheck(kingPosition))
@@ -197,11 +184,6 @@ std::vector<Move> MoveGeneration::getCaptureMoves()
 	return getAllMoves({-1, -1}, true);
 }
 
-inline int MoveGeneration::getBitIndex(bitboard board)
-{
-	return bitIndex(board);
-}
-
 bitboard MoveGeneration::getPawnMoves(int position)
 {
 	bitboard piecePosition = (bitboard)1 << position;
@@ -275,6 +257,16 @@ bitboard MoveGeneration::getBishopMoves(int position)
 	return foundMoves;
 }
 
+void MoveGeneration::getBishopMovesWithoutCapture(int position, std::vector<double>& featureVector)
+{
+	bitboard piecePosition = (bitboard)1 << position;
+
+	featureVector.push_back(Util::bitCount(northEastOccludedWithoutCapture(piecePosition)) / 7.0);
+	featureVector.push_back(Util::bitCount(northWestOccludedWithoutCapture(piecePosition)) / 7.0);
+	featureVector.push_back(Util::bitCount(southEastOccludedWithoutCapture(piecePosition)) / 7.0);
+	featureVector.push_back(Util::bitCount(southWestOccludedWithoutCapture(piecePosition)) / 7.0);
+}
+
 bitboard MoveGeneration::getRookMoves(int position)
 {
 	bitboard piecePosition = (bitboard)1 << position;
@@ -284,6 +276,16 @@ bitboard MoveGeneration::getRookMoves(int position)
 	foundMoves |= southOccluded(piecePosition);
 	foundMoves |= westOccluded(piecePosition);
 	return foundMoves;
+}
+
+void MoveGeneration::getRookMovesWithoutCapture(int position, std::vector<double>& featureVector)
+{
+	bitboard piecePosition = (bitboard)1 << position;
+
+	featureVector.push_back(Util::bitCount(eastOccludedWithoutCapture(piecePosition)) / 7.0);
+	featureVector.push_back(Util::bitCount(westOccludedWithoutCapture(piecePosition)) / 7.0);
+	featureVector.push_back(Util::bitCount(northOccludedWithoutCapture(piecePosition)) / 7.0);
+	featureVector.push_back(Util::bitCount(southOccludedWithoutCapture(piecePosition)) / 7.0);
 }
 
 bitboard MoveGeneration::getQueenMoves(int position)
@@ -299,6 +301,20 @@ bitboard MoveGeneration::getQueenMoves(int position)
 	foundMoves |= southOccluded(piecePosition);
 	foundMoves |= westOccluded(piecePosition);
 	return foundMoves;
+}
+
+void MoveGeneration::getQueenMovesWithoutCapture(int position, std::vector<double>& featureVector)
+{
+	bitboard piecePosition = (bitboard)1 << position;
+
+	featureVector.push_back(Util::bitCount(eastOccludedWithoutCapture(piecePosition)) / 7.0);
+	featureVector.push_back(Util::bitCount(westOccludedWithoutCapture(piecePosition)) / 7.0);
+	featureVector.push_back(Util::bitCount(northOccludedWithoutCapture(piecePosition)) / 7.0);
+	featureVector.push_back(Util::bitCount(southOccludedWithoutCapture(piecePosition)) / 7.0);
+	featureVector.push_back(Util::bitCount(northEastOccludedWithoutCapture(piecePosition)) / 7.0);
+	featureVector.push_back(Util::bitCount(northWestOccludedWithoutCapture(piecePosition)) / 7.0);
+	featureVector.push_back(Util::bitCount(southEastOccludedWithoutCapture(piecePosition)) / 7.0);
+	featureVector.push_back(Util::bitCount(southWestOccludedWithoutCapture(piecePosition)) / 7.0);
 }
 
 bitboard MoveGeneration::getKingMoves(int position)
@@ -427,6 +443,118 @@ bitboard MoveGeneration::southWestOccluded(bitboard piecePosition)
 	piecePosition |= meUnoccupied & (piecePosition & enemyUnoccupied) >> 9;
 	piecePosition |= meUnoccupied & (piecePosition & enemyUnoccupied) >> 9;
 	piecePosition |= meUnoccupied & (piecePosition & enemyUnoccupied) >> 9;
+	return piecePosition;
+}
+
+double MoveGeneration::northOccludedWithoutCapture(bitboard piecePosition)
+{
+	bitboard meUnoccupied = ~this->board->getOccupied(this->board->turn);
+	bitboard enemyUnoccupied = ~this->board->getOccupied(!this->board->turn);
+	piecePosition = meUnoccupied & enemyUnoccupied & (piecePosition << 8);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 8);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 8);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 8);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 8);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 8);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 8);
+	return piecePosition;
+}
+
+double MoveGeneration::eastOccludedWithoutCapture(bitboard piecePosition)
+{
+	bitboard meUnoccupied = ~this->board->getOccupied(this->board->turn) & kNotAFile;
+	bitboard enemyUnoccupied = ~this->board->getOccupied(!this->board->turn);
+	piecePosition = meUnoccupied & enemyUnoccupied & (piecePosition << 1);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 1);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 1);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 1);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 1);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 1);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 1);
+	return piecePosition;
+}
+
+double MoveGeneration::southOccludedWithoutCapture(bitboard piecePosition)
+{
+	bitboard meUnoccupied = ~this->board->getOccupied(this->board->turn);
+	bitboard enemyUnoccupied = ~this->board->getOccupied(!this->board->turn);
+	piecePosition = meUnoccupied & enemyUnoccupied & (piecePosition >> 8);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 8);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 8);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 8);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 8);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 8);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 8);
+	return piecePosition;
+}
+
+double MoveGeneration::westOccludedWithoutCapture(bitboard piecePosition)
+{
+	bitboard meUnoccupied = ~this->board->getOccupied(this->board->turn) & kNotHFile;
+	bitboard enemyUnoccupied = ~this->board->getOccupied(!this->board->turn);
+	piecePosition = meUnoccupied & enemyUnoccupied & (piecePosition >> 1);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 1);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 1);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 1);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 1);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 1);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 1);
+	return piecePosition;
+}
+
+double MoveGeneration::northEastOccludedWithoutCapture(bitboard piecePosition)
+{
+	bitboard meUnoccupied = ~this->board->getOccupied(this->board->turn) & kNotAFile;
+	bitboard enemyUnoccupied = ~this->board->getOccupied(!this->board->turn);
+	piecePosition = meUnoccupied & enemyUnoccupied & (piecePosition << 9);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 9);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 9);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 9);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 9);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 9);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 9);
+	return piecePosition;
+}
+
+double MoveGeneration::southEastOccludedWithoutCapture(bitboard piecePosition)
+{
+	bitboard meUnoccupied = ~this->board->getOccupied(this->board->turn) & kNotAFile;
+	bitboard enemyUnoccupied = ~this->board->getOccupied(!this->board->turn);
+	piecePosition = meUnoccupied & enemyUnoccupied & (piecePosition >> 7);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 7);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 7);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 7);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 7);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 7);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 7);
+	return piecePosition;
+}
+
+double MoveGeneration::northWestOccludedWithoutCapture(bitboard piecePosition)
+{
+	bitboard meUnoccupied = ~this->board->getOccupied(this->board->turn) & kNotHFile;
+	bitboard enemyUnoccupied = ~this->board->getOccupied(!this->board->turn);
+	piecePosition = meUnoccupied & enemyUnoccupied & (piecePosition << 7);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 7);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 7);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 7);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 7);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 7);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition << 7);
+	return piecePosition;
+}
+
+double MoveGeneration::southWestOccludedWithoutCapture(bitboard piecePosition)
+{
+	bitboard meUnoccupied = ~this->board->getOccupied(this->board->turn) & kNotHFile;
+	bitboard enemyUnoccupied = ~this->board->getOccupied(!this->board->turn);
+	piecePosition = meUnoccupied & enemyUnoccupied & (piecePosition >> 9);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 9);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 9);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 9);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 9);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 9);
+	piecePosition |= meUnoccupied & enemyUnoccupied & (piecePosition >> 9);
 	return piecePosition;
 }
 

@@ -36,7 +36,7 @@ int main(int argc, char** argv)
 
 	bitboard board = (bitboard)1 << 8;
 
-	std::cout << "8 | " << MoveGeneration::getBitIndex(board);
+	std::cout << "8 | " << Util::bitIndex(board);
 
 	Perft::Test();
 }
