@@ -1,28 +1,13 @@
 #include "UCI.h"
 
-#include <algorithm>
-#include <atomic>
-#include <iostream>
-#include <thread>
-#include <cstring>
-#include <iostream>
-#include <fstream>
-#include <cmath>
-#include <chrono>
-
-#include "Converter.h"
-#include "Evaluation.h"
-#include "Search.h"
-
-UCI::UCI(Board* bitboard)
+UCI::UCI(Board* board)
 {
-	engineName = "Winchess v1";
-	board = bitboard;
+	this->engineName = "Winchess v1";
+	this->board = board;
+	this->evaluator = new NeuralNetEvaluation();
 };
 
-UCI::~UCI()
-{
-};
+UCI::~UCI() {};
 
 void UCI::Read()
 {
@@ -131,9 +116,9 @@ void UCI::inputPosition()
 	std::cout << "info string " << board->getFen() << std::endl;
 };
 
-void search(Board* board)
+void search(Board* board, Evaluation* evaluator)
 {
-	Move bestMove = Search::findBestMove(board);
+	Move bestMove = Search::findBestMove(board, evaluator);
 	std::cout << "bestmove " << Converter::formatMove(bestMove) << std::endl;
 }
 
@@ -152,7 +137,7 @@ int getTime(std::string command, std::string part)
 int calculateEvalTime(Board* board)
 {
 	// Heuristics from http://http://facta.junis.ni.ac.rs/acar/acar200901/acar2009-07.pdf
-	int materialScore = Evaluation::GetPieceBasedEvaluationOfColor(board, board->turn) / 100;
+	int materialScore = MaterialEvaluation::GetPieceBasedEvaluationOfColor(board, board->turn) / 100;
 	if (materialScore < 20)
 		return materialScore + 10;
 	if (20 <= materialScore && materialScore <= 60)
@@ -163,8 +148,7 @@ int calculateEvalTime(Board* board)
 void timeClock(int timeLeft, int increment, Board* board)
 {
 	auto startTime = std::chrono::steady_clock::now();
-	int searchTime = std::min((int)((timeLeft / calculateEvalTime(board) + increment) * 0.9),
-	                          timeLeft - 100);
+	int searchTime = std::min((int)((timeLeft / calculateEvalTime(board) + increment) * 0.9), timeLeft - 100);
 
 	std::cout << "info string give search time: " << searchTime << "ms" << std::endl;
 	while (true)
@@ -206,7 +190,7 @@ void UCI::inputGo()
 
 	Search::ai_thread_running.exchange(true);
 
-	std::thread ai_thread = std::thread(search, board);
+	std::thread ai_thread = std::thread(search, this->board, this->evaluator);
 	ai_thread.detach();
 
 	if (timeLeft > 0)

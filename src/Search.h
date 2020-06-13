@@ -2,7 +2,8 @@
 #include "Board.h"
 #include "MoveGeneration.h"
 #include <atomic>
-
+#include "Util.h"
+#include "Evaluation.h"
 
 const unsigned int MAX_DEPTH = 100;
 
@@ -25,19 +26,28 @@ public:
 	static std::atomic<bool> ai_thread_running;
 
 	// Function to call alpha-beta to find the best move for the computer
-	static Move findBestMove(Board* bBoard);
-	static Move findBestMove(Board* bBoard, int depthLimit);
+	static Move findBestMove(Board* bBoard, Evaluation* evaluator);
+	static Move findBestMove(Board* bBoard, Evaluation* evaluator, int depthLimit);
 
 private:
-	static int QuiescenceSearch(Board* board,
-	                            MoveGeneration* moveGenerator,
-	                            int alpha,
-	                            int beta,
-	                            int distanceFromRoot,
-	                            int depth,
-	                            MoveList* previousPv);
+	static int QuiescenceSearch(
+		Board* board,
+	    MoveGeneration* moveGenerator,
+		Evaluation* evaluator,
+	    int alpha,
+	    int beta,
+	    int distanceFromRoot,
+	    int depth,
+	    MoveList* previousPv);
+
 	// Function that uses the recursive alpha-beta algorithm to return the value of an updated bitboard
-	static int negaMax(Board* board, MoveGeneration* moveGenerator, int depth, int alpha, int beta,
-	                   int distanceFromRoot,
-	                   MoveList* previousPv);
+	static int negaMax(
+		Board* board, 
+		MoveGeneration* moveGenerator, 
+		Evaluation* evaluator, 
+		int depth, 
+		int alpha, 
+		int beta,               
+		int distanceFromRoot,
+	    MoveList* previousPv);
 };

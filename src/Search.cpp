@@ -6,7 +6,6 @@
 #include <fstream>
 #include <chrono>
 #include "Converter.h"
-#include "Evaluation.h"
 
 int nodes;
 
@@ -20,7 +19,7 @@ void PrintSearchInfo(int value, time_t time, int depth, Move bestMove)
 		<< time << " pv " << Converter::formatMove(bestMove) << std::endl;
 }
 
-Move Search::findBestMove(Board* board)
+Move Search::findBestMove(Board* board, Evaluation* evaluator)
 {
 	int depth = 2;
 
@@ -32,7 +31,7 @@ Move Search::findBestMove(Board* board)
 	{
 		std::cout << "info depth " << depth << std::endl;
 
-		Move foundMove = Search::findBestMove(board, depth);
+		Move foundMove = Search::findBestMove(board, evaluator, depth);
 		if (foundMove.startPosition == -1)
 			// Ignore found move if smaller than 0
 			break;
@@ -48,7 +47,7 @@ Move Search::findBestMove(Board* board)
 
 MoveList previousBestPv;
 
-Move Search::findBestMove(Board* board, int depthLimit)
+Move Search::findBestMove(Board* board, Evaluation* evaluator, int depthLimit)
 {
 	nodes = 0;
 	auto startTime = std::chrono::steady_clock::now();
@@ -58,7 +57,7 @@ Move Search::findBestMove(Board* board, int depthLimit)
 
 	MoveList bestPv = MoveList();
 	// depth - 1 : Because the leaf nodes are on depth is 0 instead of 1
-	int val = negaMax(board, moveGenerator, depthLimit - 1, alpha, beta, 0, &bestPv);
+	int val = negaMax(board, moveGenerator, evaluator, depthLimit - 1, alpha, beta, 0, &bestPv);
 
 	if (!ai_thread_running)
 	{
@@ -81,32 +80,34 @@ Move Search::findBestMove(Board* board, int depthLimit)
 
 inline bool NullMoveAllowed(Board& board, MoveGeneration* move_generation, int depth)
 {
-	int kingPosition = MoveGeneration::getBitIndex(board.pieces[board.turn][King]);
+	int kingPosition = Util::bitIndex(board.pieces[board.turn][King]);
 	bool isInCheck = move_generation->isInCheck(kingPosition);
 	return !isInCheck &&
 		//don't drop directly into null move pruning
 		depth > R + 1
-		//avoid null move pruning in very late game positions due to zanauag issues. Even with verification search e.g 8/6k1/8/8/8/8/1K6/Q7 w - - 0 1
-		&& bitCount(board.getAllPieces()) >= 5;
+		//avoid null move pruning in very late game positions due to zugzwang issues. Even with verification search e.g 8/6k1/8/8/8/8/1K6/Q7 w - - 0 1
+		&& Util::bitCount(board.getAllPieces()) >= 5;
 }
 
-int Search::QuiescenceSearch(Board* board,
-                             MoveGeneration* moveGenerator,
-                             int alpha,
-                             int beta,
-                             int depth,
-                             int distanceFromRoot,
-                             MoveList* previousPv)
+int Search::QuiescenceSearch(
+	Board* board,
+    MoveGeneration* moveGenerator,
+	Evaluation* evaluator,
+    int alpha,
+    int beta,
+    int depth,
+    int distanceFromRoot,
+    MoveList* previousPv)
 
 {
 	if (distanceFromRoot >= MAX_DEPTH) return beta;
 	if (!ai_thread_running) return -1;
-	int kingPosition = MoveGeneration::getBitIndex(board->pieces[board->turn][King]);
+	int kingPosition = Util::bitIndex(board->pieces[board->turn][King]);
 	bool isInCheck = moveGenerator->isInCheck(kingPosition);
 	if (isInCheck)
-		return negaMax(board, moveGenerator, 1, alpha, beta, distanceFromRoot, previousPv);
+		return negaMax(board, moveGenerator, evaluator, 1, alpha, beta, distanceFromRoot, previousPv);
 
-	int evaluation = Evaluation::GetPieceBasedEvaluation(board);
+	int evaluation =  evaluator->Evaluate(board);
 
 	if (evaluation >= beta)
 		return beta;
@@ -124,7 +125,7 @@ int Search::QuiescenceSearch(Board* board,
 		Board* newBoard = board->getBoardWithMove(captures[captureIndex]);
 		captureIndex++;
 		moveGenerator->board = newBoard;
-		int score = -QuiescenceSearch(newBoard, moveGenerator, -beta, -alpha, depth + 1, distanceFromRoot, previousPv);
+		int score = -QuiescenceSearch(newBoard, moveGenerator, evaluator, -beta, -alpha, depth + 1, distanceFromRoot, previousPv);
 		if (!ai_thread_running)
 			return -1;
 		moveGenerator->board = board;
@@ -139,13 +140,15 @@ int Search::QuiescenceSearch(Board* board,
 	return alpha;
 }
 
-int Search::negaMax(Board* board,
-                    MoveGeneration* moveGenerator,
-                    int depth,
-                    int alpha,
-                    int beta,
-                    int distanceFromRoot,
-                    MoveList* previousPv)
+int Search::negaMax(
+	Board* board,
+    MoveGeneration* moveGenerator,
+	Evaluation* evaluator,
+    int depth,
+    int alpha,
+    int beta,
+    int distanceFromRoot,
+    MoveList* previousPv)
 {
 	nodes++;
 	MoveList pv;
@@ -154,7 +157,7 @@ int Search::negaMax(Board* board,
 	if (depth <= 0)
 	{
 		previousPv->size = 0;
-		int board_evaluation = QuiescenceSearch(board, moveGenerator, alpha, beta, 0, distanceFromRoot, &pv);
+		int board_evaluation = QuiescenceSearch(board, moveGenerator, evaluator, alpha, beta, 0, distanceFromRoot, &pv);
 		//int board_evaluation = Evaluation::GetPieceBasedEvaluation(board);
 		return board_evaluation;
 	}
@@ -174,7 +177,7 @@ int Search::negaMax(Board* board,
 		bitboard prevEnPassant = board->enPassant;
 		board->enPassant = 0;
 
-		int nullMove = -negaMax(board, moveGenerator, depth - 1 - R, -beta, -beta + 1, distanceFromRoot + 1, &pv);
+		int nullMove = -negaMax(board, moveGenerator, evaluator, depth - 1 - R, -beta, -beta + 1, distanceFromRoot + 1, &pv);
 
 		// Undo null move
 		board->turn = static_cast<PieceColor>(!board->turn);
@@ -194,7 +197,7 @@ int Search::negaMax(Board* board,
 	if (moves.size() == 0)
 	{
 		bitboard b = board->pieces[board->turn][King];
-		int kingPosition = MoveGeneration::getBitIndex(b);
+		int kingPosition = Util::bitIndex(b);
 
 		int board_evaluation = 0;
 
@@ -213,7 +216,7 @@ int Search::negaMax(Board* board,
 		Board* newBoard = board->getBoardWithMove(move);
 		moveGenerator->board = newBoard;
 
-		int score = -negaMax(newBoard, moveGenerator, depth - 1, -beta, -alpha, distanceFromRoot + 1, &pv);
+		int score = -negaMax(newBoard, moveGenerator, evaluator, depth - 1, -beta, -alpha, distanceFromRoot + 1, &pv);
 
 		if (!ai_thread_running)
 			return -1;

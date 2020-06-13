@@ -30,6 +30,7 @@ const bitboard kPieceColor[] = {kStartAllWhite, kStartAllBlack};
 
 const char kPieceChars[] = {'p', 'n', 'b', 'r', 'q', 'k'};
 
+//TODO: comment where this is used for, why is for example kPieceChars not used instead? or this instead of kPieceChar
 const std::map<char, uint8_t> types = {{'p', 0}, {'n', 1}, {'b', 2}, {'r', 3}, {'q', 4}, {'k', 5}};
 
 enum PieceType
