@@ -9,7 +9,7 @@
 //4: Queen = 9
 //5: King = 100
 const std::map<PieceType, int> typeValue = {
-	{Pawn, 100}, {Knight, 320}, {Bishop, 330}, {Rook, 500}, {Queen, 900}, {King, 20000}
+	{Pawn, 100}, {Knight, 402}, {Bishop, 420}, {Rook, 650}, {Queen, 1387}, {King, 20000}
 };
  
  
