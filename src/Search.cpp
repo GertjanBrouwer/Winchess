@@ -1,12 +1,13 @@
 #include "Search.h"
-
-#include <algorithm>
-#include <ctime>
-#include <cstring>
-#include <fstream>
-#include <chrono>
 #include "Converter.h"
 #include "Evaluation.h"
+#include "TranspositionTable.h"
+
+#include <algorithm>
+#include <chrono>
+#include <cstring>
+#include <ctime>
+#include <fstream>
 
 int nodes;
 
@@ -16,8 +17,8 @@ std::atomic<bool> Search::ai_thread_running(false);
 
 void PrintSearchInfo(int value, time_t time, int depth, Move bestMove)
 {
-	std::cout << "info score cp " << value << " depth " << depth << " nodes  " << nodes << " time "
-		<< time << " pv " << Converter::formatMove(bestMove) << std::endl;
+	std::cout << "info score cp " << value << " depth " << depth << " nodes  " << nodes << " time " << time << " pv "
+						<< Converter::formatMove(bestMove) << std::endl;
 }
 
 Move Search::findBestMove(Board* board)
@@ -28,19 +29,19 @@ Move Search::findBestMove(Board* board)
 	Move bestMove = moveGenerator->getAllMoves({-1, -1})[0];
 	delete moveGenerator;
 
-	while (Search::ai_thread_running)
+	while(Search::ai_thread_running)
 	{
+		TranspositionTable::globalInstance->clear();
 		std::cout << "info depth " << depth << std::endl;
 
 		Move foundMove = Search::findBestMove(board, depth);
-		if (foundMove.startPosition == -1)
+		if(foundMove.startPosition == -1)
 			// Ignore found move if smaller than 0
 			break;
 
 		bestMove = foundMove;
 		depth++;
-		std::cout << "info currmove " << Converter::formatMove(bestMove) << " currmovenumber " << depth - 1 << std::
-			endl;
+		std::cout << "info currmove " << Converter::formatMove(bestMove) << " currmovenumber " << depth - 1 << std::endl;
 	}
 
 	return bestMove;
@@ -60,7 +61,7 @@ Move Search::findBestMove(Board* board, int depthLimit)
 	// depth - 1 : Because the leaf nodes are on depth is 0 instead of 1
 	int val = negaMax(board, moveGenerator, depthLimit - 1, alpha, beta, 0, &bestPv);
 
-	if (!ai_thread_running)
+	if(!ai_thread_running)
 	{
 		return {-1, -1};
 	}
@@ -78,61 +79,62 @@ Move Search::findBestMove(Board* board, int depthLimit)
 	return bestMove;
 }
 
-
 inline bool NullMoveAllowed(Board& board, MoveGeneration* move_generation, int depth)
 {
 	int kingPosition = MoveGeneration::getBitIndex(board.pieces[board.turn][King]);
 	bool isInCheck = move_generation->isInCheck(kingPosition);
 	return !isInCheck &&
-		//don't drop directly into null move pruning
-		depth > R + 1
-		//avoid null move pruning in very late game positions due to zanauag issues. Even with verification search e.g 8/6k1/8/8/8/8/1K6/Q7 w - - 0 1
-		&& bitCount(board.getAllPieces()) >= 5;
+	       //don't drop directly into null move pruning
+	       depth > R + 1
+	       //avoid null move pruning in very late game positions due to zanauag issues. Even with verification search e.g 8/6k1/8/8/8/8/1K6/Q7 w - - 0 1
+	       && bitCount(board.getAllPieces()) >= 5;
 }
 
 int Search::QuiescenceSearch(Board* board,
-                             MoveGeneration* moveGenerator,
-                             int alpha,
-                             int beta,
-                             int depth,
-                             int distanceFromRoot,
-                             MoveList* previousPv)
+			     MoveGeneration* moveGenerator,
+			     int alpha,
+			     int beta,
+			     int depth,
+			     int distanceFromRoot,
+			     MoveList* previousPv)
 
 {
-	if (distanceFromRoot >= MAX_DEPTH) return beta;
-	if (!ai_thread_running) return -1;
+	if(distanceFromRoot >= MAX_DEPTH)
+		return beta;
+	if(!ai_thread_running)
+		return -1;
 	int kingPosition = MoveGeneration::getBitIndex(board->pieces[board->turn][King]);
 	bool isInCheck = moveGenerator->isInCheck(kingPosition);
-	if (isInCheck)
+	if(isInCheck)
 		return negaMax(board, moveGenerator, 1, alpha, beta, distanceFromRoot, previousPv);
 
 	int evaluation = Evaluation::GetPieceBasedEvaluation(board);
 
-	if (evaluation >= beta)
+	if(evaluation >= beta)
 		return beta;
-	if (evaluation > alpha)
+	if(evaluation > alpha)
 		alpha = evaluation;
 
 	std::vector<Move> captures = moveGenerator->getCaptureMoves();
 	int captureIndex = 0;
 
-	if (distanceFromRoot == 8)
+	if(distanceFromRoot == 8)
 		captureIndex = 0;
 
-	while (captureIndex < captures.size() && captures[captureIndex].score > 0)
+	while(captureIndex < captures.size() && captures[captureIndex].score > 0)
 	{
 		Board* newBoard = board->getBoardWithMove(captures[captureIndex]);
 		captureIndex++;
 		moveGenerator->board = newBoard;
 		int score = -QuiescenceSearch(newBoard, moveGenerator, -beta, -alpha, depth + 1, distanceFromRoot, previousPv);
-		if (!ai_thread_running)
+		if(!ai_thread_running)
 			return -1;
 		moveGenerator->board = board;
 		delete newBoard;
 
-		if (score >= beta)
+		if(score >= beta)
 			return beta;
-		if (score > alpha)
+		if(score > alpha)
 			alpha = score;
 	}
 
@@ -140,18 +142,36 @@ int Search::QuiescenceSearch(Board* board,
 }
 
 int Search::negaMax(Board* board,
-                    MoveGeneration* moveGenerator,
-                    int depth,
-                    int alpha,
-                    int beta,
-                    int distanceFromRoot,
-                    MoveList* previousPv)
+		    MoveGeneration* moveGenerator,
+		    int depth,
+		    int alpha,
+		    int beta,
+		    int distanceFromRoot,
+		    MoveList* previousPv)
 {
+	int alphaOrigin = alpha;
+
 	nodes++;
 	MoveList pv;
 
+	uint64_t hash = TranspositionTable::globalInstance->hash(board);
+	TTEntry entry = TranspositionTable::globalInstance->probe(hash);
+
+	if(entry.depth >= depth)
+	{
+		if(entry.flag == Exact)
+			return entry.evaluation;
+		else if(entry.flag == Lowerbound)
+			alpha = std::max(alpha, entry.evaluation);
+		else if(entry.flag == Upperbound)
+			beta = std::min(beta, entry.evaluation);
+
+		if(alpha >= beta)
+			return entry.evaluation;
+	}
+
 	// Stop search if the search has reached the maximum depth
-	if (depth <= 0)
+	if(depth <= 0)
 	{
 		previousPv->size = 0;
 		int board_evaluation = QuiescenceSearch(board, moveGenerator, alpha, beta, 0, distanceFromRoot, &pv);
@@ -159,7 +179,7 @@ int Search::negaMax(Board* board,
 		return board_evaluation;
 	}
 
-	if (!ai_thread_running)
+	if(!ai_thread_running)
 		return 0;
 
 	int nodes = 0;
@@ -167,7 +187,7 @@ int Search::negaMax(Board* board,
 	moveGenerator->board = board;
 
 	////Null move pruning
-	if (NullMoveAllowed(*board, moveGenerator, depth))
+	if(NullMoveAllowed(*board, moveGenerator, depth))
 	{
 		// Do null move
 		board->turn = static_cast<PieceColor>(!board->turn);
@@ -180,7 +200,7 @@ int Search::negaMax(Board* board,
 		board->turn = static_cast<PieceColor>(!board->turn);
 		board->enPassant = prevEnPassant;
 
-		if (nullMove >= beta)
+		if(nullMove >= beta)
 		{
 			return beta;
 		}
@@ -191,14 +211,14 @@ int Search::negaMax(Board* board,
 	std::vector<Move> moves = moveGenerator->getAllMoves(bestPvMove);
 
 	// Stop search if there are no more legal moves
-	if (moves.size() == 0)
+	if(moves.size() == 0)
 	{
 		bitboard b = board->pieces[board->turn][King];
 		int kingPosition = MoveGeneration::getBitIndex(b);
 
 		int board_evaluation = 0;
 
-		if (moveGenerator->isInCheck(kingPosition))
+		if(moveGenerator->isInCheck(kingPosition))
 			board_evaluation = -10000 - depth; // Score for checkmate (subtract depth to prioritize closer checkmates)
 
 		return board_evaluation;
@@ -208,24 +228,24 @@ int Search::negaMax(Board* board,
 	int bestScore = alpha;
 
 	// Maximize the value if it is the computer's turn to move
-	for (Move move : moves)
+	for(Move move : moves)
 	{
 		Board* newBoard = board->getBoardWithMove(move);
 		moveGenerator->board = newBoard;
 
 		int score = -negaMax(newBoard, moveGenerator, depth - 1, -beta, -alpha, distanceFromRoot + 1, &pv);
 
-		if (!ai_thread_running)
+		if(!ai_thread_running)
 			return -1;
 
 		moveGenerator->board = board;
 		delete newBoard;
 
-		if (score > bestScore)
+		if(score > bestScore)
 		{
 			bestScore = score;
 			bestMove = move;
-			if (bestScore > alpha)
+			if(bestScore > alpha)
 			{
 				alpha = bestScore;
 				previousPv->list[0] = move;
@@ -235,9 +255,17 @@ int Search::negaMax(Board* board,
 			}
 		}
 
-		if (alpha >= beta) //Fail high cutoff
+		if(alpha >= beta) //Fail high cutoff
 			return beta;
 	}
+
+	Flag flag = Exact;
+	if(alpha <= alphaOrigin)
+		flag = Upperbound;
+	else if(alpha >= beta)
+		flag = Lowerbound;
+
+	TranspositionTable::globalInstance->save(hash, bestMove, alpha, depth, flag);
 
 	return alpha;
 }

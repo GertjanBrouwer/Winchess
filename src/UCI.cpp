@@ -13,6 +13,7 @@
 #include "Converter.h"
 #include "Evaluation.h"
 #include "Search.h"
+#include "TranspositionTable.h"
 
 UCI::UCI(Board* bitboard)
 {
@@ -166,15 +167,13 @@ void timeClock(int timeLeft, int increment, Board* board)
 	int searchTime = std::min((int)((timeLeft / calculateEvalTime(board) + increment) * 0.9),
 	                          timeLeft - 100);
 
-	std::cout << "info string give search time: " << searchTime << "ms" << std::endl;
-	while (true)
+	while(true)
 	{
 		auto now = std::chrono::steady_clock::now();
 		int calculatedTime = std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count();
 		if (calculatedTime >= searchTime)
 		{
 			// Exit the search thread and return best move found
-			std::cout << "info string ai thread cancelled (calculatedTime: " << calculatedTime << ")" << std::endl;
 			Search::ai_thread_running.exchange(false);
 			return;
 		}
@@ -202,7 +201,6 @@ void UCI::inputGo()
 	int moveTime = getTime(cmd, "movetime");
 	if (moveTime > 0)
 		timeLeft = moveTime;
-
 
 	Search::ai_thread_running.exchange(true);
 

@@ -16,14 +16,12 @@ struct CalculatedMove
 {
 	int value;
 	Move move;
-	int nodes;
 };
 
 class Search
 {
 public:
 	static std::atomic<bool> ai_thread_running;
-
 	// Function to call alpha-beta to find the best move for the computer
 	static Move findBestMove(Board* bBoard);
 	static Move findBestMove(Board* bBoard, int depthLimit);
