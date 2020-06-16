@@ -149,7 +149,7 @@ int Search::negaMax(Board* board,
 		    int distanceFromRoot,
 		    MoveList* previousPv)
 {
-	int alphaOrig = alpha;
+	int alphaOrigin = alpha;
 
 	nodes++;
 	MoveList pv;
@@ -260,7 +260,7 @@ int Search::negaMax(Board* board,
 	}
 
 	Flag flag = Exact;
-	if(alpha <= alphaOrig)
+	if(alpha <= alphaOrigin)
 		flag = Upperbound;
 	else if(alpha >= beta)
 		flag = Lowerbound;
